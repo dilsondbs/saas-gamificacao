@@ -1,0 +1,24 @@
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# Laravel / PHP
+vendor/
+.env
+.env.*
+.phpunit.result.cache
+storage/*.key
+storage/logs/
+bootstrap/cache/
+public/storage
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+
+# Agentes locais
+.codex/
+.claude/
