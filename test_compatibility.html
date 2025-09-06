@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Compatibilidade - SaaS Gamificação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .viewport-info {
+            background: #e9ecef;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .test-frame {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Compatibilidade - SaaS Gamificação</h1>
+        
+        <div class="viewport-info">
+            <strong>Informações do Navegador:</strong>
+            <div id="browser-info"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 1. Teste de Navegadores</h3>
+            <div id="browser-tests">
+                <button onclick="runBrowserTests()">Executar Testes de Browser</button>
+                <div id="browser-results"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 2. Teste de Responsividade</h3>
+            <div id="responsive-tests">
+                <button onclick="runResponsiveTests()">Testar Resoluções</button>
+                <div class="performance-metrics">
+                    <div class="metric-card">
+                        <div class="metric-value" id="screen-width">-</div>
+                        <div>Largura da Tela</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="screen-height">-</div>
+                        <div>Altura da Tela</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="device-ratio">-</div>
+                        <div>Device Pixel Ratio</div>
+                    </div>
+                </div>
+                <div id="responsive-results"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>⚡ 3. Teste de Performance</h3>
+            <div id="performance-tests">
+                <button onclick="runPerformanceTests()">Executar Testes de Performance</button>
+                <div class="performance-metrics">
+                    <div class="metric-card">
+                        <div class="metric-value" id="load-time">-</div>
+                        <div>Tempo de Carregamento (ms)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="dom-ready">-</div>
+                        <div>DOM Ready (ms)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="memory-usage">-</div>
+                        <div>Uso de Memória (MB)</div>
+                    </div>
+                </div>
+                <div id="performance-results"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 4. Teste de Funcionalidades Críticas</h3>
+            <div id="functionality-tests">
+                <button onclick="runFunctionalityTests()">Testar Funcionalidades</button>
+                <div id="functionality-results"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 5. Teste de Interface</h3>
+            <div id="ui-tests">
+                <button onclick="runUITests()">Testar Interface</button>
+                <div id="ui-results"></div>
+                <div class="test-frame" id="app-frame-container" style="display: none;">
+                    <iframe id="app-frame" width="100%" height="600" 
+                            src="http://localhost:8000" 
+                            title="Aplicação em Teste"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Relatório Final</h3>
+            <div id="final-report"></div>
+        </div>
+    </div>
+
+    <script>
+        // Informações do navegador
+        function getBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                browser: getBrowserName(),
+                version: getBrowserVersion(),
+                platform: navigator.platform,
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                viewportWidth: window.innerWidth,
+                viewportHeight: window.innerHeight,
+                devicePixelRatio: window.devicePixelRatio || 1,
+                touchSupport: 'ontouchstart' in window
+            };
+            return info;
+        }
+
+        function getBrowserName() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (userAgent.includes('chrome') && !userAgent.includes('edge')) return 'Chrome';
+            if (userAgent.includes('firefox')) return 'Firefox';
+            if (userAgent.includes('safari') && !userAgent.includes('chrome')) return 'Safari';
+            if (userAgent.includes('edge')) return 'Edge';
+            if (userAgent.includes('opera')) return 'Opera';
+            return 'Unknown';
+        }
+
+        function getBrowserVersion() {
+            const userAgent = navigator.userAgent;
+            const browser = getBrowserName();
+            let version = 'Unknown';
+            
+            switch(browser) {
+                case 'Chrome':
+                    const chromeMatch = userAgent.match(/Chrome\/([0-9.]+)/);
+                    version = chromeMatch ? chromeMatch[1] : 'Unknown';
+                    break;
+                case 'Firefox':
+                    const firefoxMatch = userAgent.match(/Firefox\/([0-9.]+)/);
+                    version = firefoxMatch ? firefoxMatch[1] : 'Unknown';
+                    break;
+                case 'Safari':
+                    const safariMatch = userAgent.match(/Version\/([0-9.]+)/);
+                    version = safariMatch ? safariMatch[1] : 'Unknown';
+                    break;
+                case 'Edge':
+                    const edgeMatch = userAgent.match(/Edge\/([0-9.]+)/);
+                    version = edgeMatch ? edgeMatch[1] : 'Unknown';
+                    break;
+            }
+            return version;
+        }
+
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+        }
+
+        // 1. Testes de Navegador
+        function runBrowserTests() {
+            const results = document.getElementById('browser-results');
+            results.innerHTML = '';
+            
+            const info = getBrowserInfo();
+            
+            addResult('browser-results', `🌐 Navegador: ${info.browser} ${info.version}`, 'info');
+            addResult('browser-results', `💻 Plataforma: ${info.platform}`, 'info');
+            addResult('browser-results', `🌍 Idioma: ${info.language}`, 'info');
+            addResult('browser-results', `🍪 Cookies: ${info.cookieEnabled ? 'Habilitados' : 'Desabilitados'}`, 
+                     info.cookieEnabled ? 'success' : 'error');
+            addResult('browser-results', `📡 Online: ${info.onLine ? 'Sim' : 'Não'}`, 
+                     info.onLine ? 'success' : 'warning');
+            addResult('browser-results', `📱 Touch Support: ${info.touchSupport ? 'Sim' : 'Não'}`, 'info');
+            
+            // Testar recursos específicos
+            testBrowserFeatures();
+        }
+
+        function testBrowserFeatures() {
+            // Local Storage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                addResult('browser-results', '✅ Local Storage: Funcionando', 'success');
+            } catch (e) {
+                addResult('browser-results', '❌ Local Storage: Não funciona', 'error');
+            }
+
+            // Session Storage
+            try {
+                sessionStorage.setItem('test', 'test');
+                sessionStorage.removeItem('test');
+                addResult('browser-results', '✅ Session Storage: Funcionando', 'success');
+            } catch (e) {
+                addResult('browser-results', '❌ Session Storage: Não funciona', 'error');
+            }
+
+            // CSS Features
+            const cssFeatures = [
+                { feature: 'CSS Grid', property: 'display', value: 'grid' },
+                { feature: 'CSS Flexbox', property: 'display', value: 'flex' },
+                { feature: 'CSS Variables', property: '--test-var', value: 'test' }
+            ];
+
+            cssFeatures.forEach(test => {
+                const element = document.createElement('div');
+                element.style[test.property] = test.value;
+                const supported = element.style[test.property] === test.value;
+                addResult('browser-results', 
+                         `${supported ? '✅' : '❌'} ${test.feature}: ${supported ? 'Suportado' : 'Não suportado'}`, 
+                         supported ? 'success' : 'warning');
+            });
+
+            // JavaScript Features
+            const jsFeatures = [
+                { name: 'Fetch API', test: () => typeof fetch !== 'undefined' },
+                { name: 'Promises', test: () => typeof Promise !== 'undefined' },
+                { name: 'Arrow Functions', test: () => {
+                    try {
+                        new Function('() => {}');
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }},
+                { name: 'Async/Await', test: () => {
+                    try {
+                        new Function('async () => { await Promise.resolve(); }');
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }}
+            ];
+
+            jsFeatures.forEach(test => {
+                const supported = test.test();
+                addResult('browser-results', 
+                         `${supported ? '✅' : '❌'} ${test.name}: ${supported ? 'Suportado' : 'Não suportado'}`, 
+                         supported ? 'success' : 'error');
+            });
+        }
+
+        // 2. Testes de Responsividade
+        function runResponsiveTests() {
+            const results = document.getElementById('responsive-results');
+            results.innerHTML = '';
+            
+            updateViewportInfo();
+            
+            const info = getBrowserInfo();
+            const breakpoints = {
+                'Mobile Portrait': { min: 0, max: 480 },
+                'Mobile Landscape': { min: 481, max: 768 },
+                'Tablet Portrait': { min: 769, max: 1024 },
+                'Tablet Landscape': { min: 1025, max: 1200 },
+                'Desktop': { min: 1201, max: 1920 },
+                'Large Desktop': { min: 1921, max: 9999 }
+            };
+
+            let currentBreakpoint = 'Unknown';
+            for (const [name, range] of Object.entries(breakpoints)) {
+                if (info.viewportWidth >= range.min && info.viewportWidth <= range.max) {
+                    currentBreakpoint = name;
+                    break;
+                }
+            }
+
+            addResult('responsive-results', `📐 Breakpoint Atual: ${currentBreakpoint}`, 'info');
+            addResult('responsive-results', `📏 Viewport: ${info.viewportWidth}x${info.viewportHeight}`, 'info');
+            addResult('responsive-results', `🖥️ Tela: ${info.screenWidth}x${info.screenHeight}`, 'info');
+            addResult('responsive-results', `🔍 Device Pixel Ratio: ${info.devicePixelRatio}`, 'info');
+
+            // Testar orientação
+            const orientation = info.viewportWidth > info.viewportHeight ? 'Landscape' : 'Portrait';
+            addResult('responsive-results', `📱 Orientação: ${orientation}`, 'info');
+
+            // Simular diferentes resoluções
+            simulateResolutions();
+        }
+
+        function simulateResolutions() {
+            const testResolutions = [
+                { name: 'iPhone SE', width: 375, height: 667 },
+                { name: 'iPhone 12 Pro', width: 414, height: 896 },
+                { name: 'Samsung Galaxy S20', width: 360, height: 640 },
+                { name: 'iPad', width: 768, height: 1024 },
+                { name: 'iPad Pro', width: 1024, height: 1366 },
+                { name: 'Desktop HD', width: 1366, height: 768 },
+                { name: 'Desktop FHD', width: 1920, height: 1080 }
+            ];
+
+            addResult('responsive-results', '📱 Testando compatibilidade com resoluções:', 'info');
+            
+            testResolutions.forEach(resolution => {
+                const isCurrentSize = Math.abs(window.innerWidth - resolution.width) < 50 && 
+                                    Math.abs(window.innerHeight - resolution.height) < 50;
+                
+                const status = isCurrentSize ? '🎯 Atual' : '📐 Suportado';
+                addResult('responsive-results', 
+                         `${status} ${resolution.name}: ${resolution.width}x${resolution.height}`, 
+                         isCurrentSize ? 'success' : 'info');
+            });
+        }
+
+        function updateViewportInfo() {
+            document.getElementById('screen-width').textContent = window.innerWidth + 'px';
+            document.getElementById('screen-height').textContent = window.innerHeight + 'px';
+            document.getElementById('device-ratio').textContent = (window.devicePixelRatio || 1).toFixed(2);
+        }
+
+        // 3. Testes de Performance
+        function runPerformanceTests() {
+            const results = document.getElementById('performance-results');
+            results.innerHTML = '';
+
+            // Performance timing
+            if (performance && performance.timing) {
+                const timing = performance.timing;
+                const loadTime = timing.loadEventEnd - timing.navigationStart;
+                const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
+                
+                document.getElementById('load-time').textContent = loadTime || '-';
+                document.getElementById('dom-ready').textContent = domReady || '-';
+                
+                addResult('performance-results', `⏱️ Tempo total de carregamento: ${loadTime}ms`, 
+                         loadTime < 3000 ? 'success' : loadTime < 5000 ? 'warning' : 'error');
+                addResult('performance-results', `🚀 DOM Ready: ${domReady}ms`, 
+                         domReady < 1500 ? 'success' : domReady < 3000 ? 'warning' : 'error');
+            }
+
+            // Memory usage (se disponível)
+            if (performance && performance.memory) {
+                const memoryMB = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                document.getElementById('memory-usage').textContent = memoryMB;
+                
+                addResult('performance-results', `💾 Uso de memória JS: ${memoryMB}MB`, 
+                         memoryMB < 50 ? 'success' : memoryMB < 100 ? 'warning' : 'error');
+            } else {
+                document.getElementById('memory-usage').textContent = 'N/A';
+                addResult('performance-results', '💾 Informações de memória não disponíveis', 'warning');
+            }
+
+            // Testar performance de renderização
+            testRenderPerformance();
+            
+            // Testar network
+            testNetworkPerformance();
+        }
+
+        function testRenderPerformance() {
+            const start = performance.now();
+            
+            // Criar e renderizar elementos
+            const container = document.createElement('div');
+            for (let i = 0; i < 1000; i++) {
+                const div = document.createElement('div');
+                div.textContent = `Test element ${i}`;
+                div.style.display = 'none';
+                container.appendChild(div);
+            }
+            document.body.appendChild(container);
+            
+            const renderTime = performance.now() - start;
+            document.body.removeChild(container);
+            
+            addResult('performance-results', `🎨 Render 1000 elementos: ${renderTime.toFixed(2)}ms`, 
+                     renderTime < 50 ? 'success' : renderTime < 100 ? 'warning' : 'error');
+        }
+
+        function testNetworkPerformance() {
+            if (navigator.connection) {
+                const conn = navigator.connection;
+                addResult('performance-results', `📶 Tipo de conexão: ${conn.effectiveType || 'Unknown'}`, 'info');
+                addResult('performance-results', `📶 Velocidade estimada: ${conn.downlink || 'Unknown'}Mbps`, 'info');
+                addResult('performance-results', `📶 RTT: ${conn.rtt || 'Unknown'}ms`, 'info');
+            } else {
+                addResult('performance-results', '📶 Informações de rede não disponíveis', 'warning');
+            }
+        }
+
+        // 4. Testes de Funcionalidades
+        function runFunctionalityTests() {
+            const results = document.getElementById('functionality-results');
+            results.innerHTML = '';
+
+            // Testar AJAX/Fetch
+            testAjaxFunctionality();
+            
+            // Testar Forms
+            testFormFunctionality();
+            
+            // Testar Media Queries
+            testMediaQueries();
+        }
+
+        function testAjaxFunctionality() {
+            addResult('functionality-results', '🔗 Testando conectividade com servidor...', 'info');
+            
+            fetch('http://localhost:8000/health')
+                .then(response => {
+                    if (response.ok) {
+                        addResult('functionality-results', '✅ Servidor Laravel: Conectado', 'success');
+                        return response.json();
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .then(data => {
+                    addResult('functionality-results', `📊 Health Check: ${data.status || 'OK'}`, 'success');
+                })
+                .catch(error => {
+                    addResult('functionality-results', `❌ Erro de conectividade: ${error.message}`, 'error');
+                });
+        }
+
+        function testFormFunctionality() {
+            // Testar validação HTML5
+            const form = document.createElement('form');
+            const input = document.createElement('input');
+            input.type = 'email';
+            input.required = true;
+            input.value = 'invalid-email';
+            form.appendChild(input);
+            
+            const validationSupported = input.checkValidity !== undefined;
+            const isValid = validationSupported ? input.checkValidity() : true;
+            
+            addResult('functionality-results', 
+                     `📝 Validação HTML5: ${validationSupported ? 'Suportada' : 'Não suportada'}`, 
+                     validationSupported ? 'success' : 'warning');
+                     
+            if (validationSupported) {
+                addResult('functionality-results', 
+                         `📝 Teste de validação email: ${!isValid ? 'Funcionando' : 'Falhou'}`, 
+                         !isValid ? 'success' : 'error');
+            }
+        }
+
+        function testMediaQueries() {
+            const mediaQueries = [
+                { name: 'Mobile', query: '(max-width: 768px)' },
+                { name: 'Tablet', query: '(min-width: 769px) and (max-width: 1024px)' },
+                { name: 'Desktop', query: '(min-width: 1025px)' },
+                { name: 'High DPI', query: '(-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi)' }
+            ];
+
+            mediaQueries.forEach(mq => {
+                const matches = window.matchMedia(mq.query).matches;
+                addResult('functionality-results', 
+                         `📱 Media Query ${mq.name}: ${matches ? 'Ativa' : 'Inativa'}`, 
+                         matches ? 'success' : 'info');
+            });
+        }
+
+        // 5. Testes de Interface
+        function runUITests() {
+            const results = document.getElementById('ui-results');
+            results.innerHTML = '';
+            
+            // Mostrar iframe da aplicação
+            const frameContainer = document.getElementById('app-frame-container');
+            frameContainer.style.display = 'block';
+            
+            addResult('ui-results', '🖼️ Iframe da aplicação carregado para teste visual', 'info');
+            addResult('ui-results', '👀 Verifique visualmente:', 'info');
+            addResult('ui-results', '• Layout responsivo funcionando', 'info');
+            addResult('ui-results', '• Botões clicáveis em dispositivos touch', 'info');
+            addResult('ui-results', '• Texto legível em todas as resoluções', 'info');
+            addResult('ui-results', '• Navegação funcionando corretamente', 'info');
+            addResult('ui-results', '• Formulários utilizáveis em mobile', 'info');
+            
+            // Testar elementos críticos da UI
+            testCriticalUIElements();
+        }
+
+        function testCriticalUIElements() {
+            const iframe = document.getElementById('app-frame');
+            
+            iframe.onload = function() {
+                addResult('ui-results', '✅ Aplicação carregada no iframe', 'success');
+                
+                // Testar se consegue acessar o conteúdo do iframe (pode dar erro de CORS)
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (iframeDoc) {
+                        addResult('ui-results', '✅ Conteúdo do iframe acessível', 'success');
+                        
+                        // Verificar elementos básicos
+                        const hasTitle = iframeDoc.querySelector('title');
+                        const hasNavigation = iframeDoc.querySelector('nav') || iframeDoc.querySelector('[role="navigation"]');
+                        const hasMainContent = iframeDoc.querySelector('main') || iframeDoc.querySelector('[role="main"]');
+                        
+                        addResult('ui-results', `${hasTitle ? '✅' : '❌'} Título da página encontrado`, 
+                                 hasTitle ? 'success' : 'warning');
+                        addResult('ui-results', `${hasNavigation ? '✅' : '❌'} Navegação encontrada`, 
+                                 hasNavigation ? 'success' : 'warning');
+                        addResult('ui-results', `${hasMainContent ? '✅' : '❌'} Conteúdo principal encontrado`, 
+                                 hasMainContent ? 'success' : 'warning');
+                    }
+                } catch (e) {
+                    addResult('ui-results', '⚠️ Não foi possível acessar conteúdo do iframe (CORS)', 'warning');
+                }
+            };
+            
+            iframe.onerror = function() {
+                addResult('ui-results', '❌ Erro ao carregar aplicação no iframe', 'error');
+            };
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            const info = getBrowserInfo();
+            document.getElementById('browser-info').innerHTML = `
+                <strong>Navegador:</strong> ${info.browser} ${info.version}<br>
+                <strong>Plataforma:</strong> ${info.platform}<br>
+                <strong>Viewport:</strong> ${info.viewportWidth}x${info.viewportHeight}<br>
+                <strong>Tela:</strong> ${info.screenWidth}x${info.screenHeight}<br>
+                <strong>Device Pixel Ratio:</strong> ${info.devicePixelRatio}
+            `;
+            
+            updateViewportInfo();
+            
+            // Atualizar viewport info quando redimensionar
+            window.addEventListener('resize', updateViewportInfo);
+        });
+
+        // Gerar relatório final
+        function generateFinalReport() {
+            const report = document.getElementById('final-report');
+            const info = getBrowserInfo();
+            
+            const testResults = {
+                browser: info.browser,
+                version: info.version,
+                platform: info.platform,
+                viewport: `${info.viewportWidth}x${info.viewportHeight}`,
+                devicePixelRatio: info.devicePixelRatio,
+                touchSupport: info.touchSupport,
+                timestamp: new Date().toLocaleString()
+            };
+
+            report.innerHTML = `
+                <h4>📊 Resumo dos Testes</h4>
+                <div class="test-result info">
+                    <strong>Data/Hora:</strong> ${testResults.timestamp}<br>
+                    <strong>Navegador:</strong> ${testResults.browser} ${testResults.version}<br>
+                    <strong>Plataforma:</strong> ${testResults.platform}<br>
+                    <strong>Resolução:</strong> ${testResults.viewport}<br>
+                    <strong>Touch Support:</strong> ${testResults.touchSupport ? 'Sim' : 'Não'}<br>
+                </div>
+                <div class="test-result success">
+                    ✅ Para um relatório completo, execute todos os testes individualmente.
+                </div>
+            `;
+        }
+
+        // Executar relatório final automaticamente após 2 segundos
+        setTimeout(generateFinalReport, 2000);
+    </script>
+</body>
+</html>

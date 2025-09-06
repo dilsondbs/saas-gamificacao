@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliação UX por Personas - SaaS Gamificação</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .persona-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .persona-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .persona-content.active {
+            display: block;
+        }
+
+        .persona-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .persona-icon {
+            font-size: 3rem;
+            margin-right: 20px;
+        }
+
+        .persona-info h2 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .persona-info p {
+            color: #718096;
+        }
+
+        .evaluation-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .criteria-item {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .rating-scale {
+            display: flex;
+            gap: 5px;
+        }
+
+        .rating-scale input[type="radio"] {
+            display: none;
+        }
+
+        .rating-scale label {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .rating-scale label:hover {
+            transform: scale(1.1);
+        }
+
+        .rating-scale input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .issues-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .issue-type {
+            margin-bottom: 15px;
+        }
+
+        .issue-type h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .critical { color: #e53e3e; }
+        .moderate { color: #d69e2e; }
+        .improvement { color: #38a169; }
+
+        .issue-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        .highlights-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .highlights-section h4 {
+            margin-bottom: 10px;
+        }
+
+        .highlights-section input,
+        .highlights-section textarea {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            placeholder-color: rgba(255,255,255,0.7);
+        }
+
+        .highlights-section input::placeholder,
+        .highlights-section textarea::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .summary-section {
+            background: #2d3748;
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .export-buttons {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .criteria-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .persona-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .persona-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 Avaliação UX por Personas</h1>
+            <p>Sistema de Avaliação da Experiência do Usuário - SaaS Gamificação</p>
+        </div>
+
+        <div class="persona-tabs">
+            <button class="tab-button active" onclick="showPersona('admin')">👨‍💼 Super Admin</button>
+            <button class="tab-button" onclick="showPersona('instructor')">👨‍🏫 Instructor</button>
+            <button class="tab-button" onclick="showPersona('student')">👩‍🎓 Student</button>
+            <button class="tab-button" onclick="showPersona('summary')">📊 Resumo</button>
+        </div>
+
+        <!-- Persona Admin -->
+        <div id="admin-content" class="persona-content active">
+            <div class="persona-header">
+                <div class="persona-icon">👨‍💼</div>
+                <div class="persona-info">
+                    <h2>Super Administrador</h2>
+                    <p>João Silva - CTO da SaaS Gamificação</p>
+                    <p><strong>Objetivo:</strong> Gerenciar tenants e monitorar sistema</p>
+                </div>
+            </div>
+
+            <div class="evaluation-section">
+                <h3 class="section-title">📊 Critérios de Avaliação</h3>
+                <div class="criteria-grid">
+                    <div class="criteria-item">Facilidade de Login</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="admin-login" value="1" id="admin-login-1">
+                        <label for="admin-login-1">1</label>
+                        <input type="radio" name="admin-login" value="2" id="admin-login-2">
+                        <label for="admin-login-2">2</label>
+                        <input type="radio" name="admin-login" value="3" id="admin-login-3">
+                        <label for="admin-login-3">3</label>
+                        <input type="radio" name="admin-login" value="4" id="admin-login-4">
+                        <label for="admin-login-4">4</label>
+                        <input type="radio" name="admin-login" value="5" id="admin-login-5">
+                        <label for="admin-login-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre o login..."></textarea>
+
+                    <div class="criteria-item">Clareza da Navegação</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="admin-nav" value="1" id="admin-nav-1">
+                        <label for="admin-nav-1">1</label>
+                        <input type="radio" name="admin-nav" value="2" id="admin-nav-2">
+                        <label for="admin-nav-2">2</label>
+                        <input type="radio" name="admin-nav" value="3" id="admin-nav-3">
+                        <label for="admin-nav-3">3</label>
+                        <input type="radio" name="admin-nav" value="4" id="admin-nav-4">
+                        <label for="admin-nav-4">4</label>
+                        <input type="radio" name="admin-nav" value="5" id="admin-nav-5">
+                        <label for="admin-nav-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre a navegação..."></textarea>
+
+                    <div class="criteria-item">Velocidade de Carregamento</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="admin-speed" value="1" id="admin-speed-1">
+                        <label for="admin-speed-1">1</label>
+                        <input type="radio" name="admin-speed" value="2" id="admin-speed-2">
+                        <label for="admin-speed-2">2</label>
+                        <input type="radio" name="admin-speed" value="3" id="admin-speed-3">
+                        <label for="admin-speed-3">3</label>
+                        <input type="radio" name="admin-speed" value="4" id="admin-speed-4">
+                        <label for="admin-speed-4">4</label>
+                        <input type="radio" name="admin-speed" value="5" id="admin-speed-5">
+                        <label for="admin-speed-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre performance..."></textarea>
+
+                    <div class="criteria-item">Intuitividade das Ações</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="admin-intuitive" value="1" id="admin-intuitive-1">
+                        <label for="admin-intuitive-1">1</label>
+                        <input type="radio" name="admin-intuitive" value="2" id="admin-intuitive-2">
+                        <label for="admin-intuitive-2">2</label>
+                        <input type="radio" name="admin-intuitive" value="3" id="admin-intuitive-3">
+                        <label for="admin-intuitive-3">3</label>
+                        <input type="radio" name="admin-intuitive" value="4" id="admin-intuitive-4">
+                        <label for="admin-intuitive-4">4</label>
+                        <input type="radio" name="admin-intuitive" value="5" id="admin-intuitive-5">
+                        <label for="admin-intuitive-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre usabilidade..."></textarea>
+
+                    <div class="criteria-item">Feedback Visual</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="admin-feedback" value="1" id="admin-feedback-1">
+                        <label for="admin-feedback-1">1</label>
+                        <input type="radio" name="admin-feedback" value="2" id="admin-feedback-2">
+                        <label for="admin-feedback-2">2</label>
+                        <input type="radio" name="admin-feedback" value="3" id="admin-feedback-3">
+                        <label for="admin-feedback-3">3</label>
+                        <input type="radio" name="admin-feedback" value="4" id="admin-feedback-4">
+                        <label for="admin-feedback-4">4</label>
+                        <input type="radio" name="admin-feedback" value="5" id="admin-feedback-5">
+                        <label for="admin-feedback-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre feedback..."></textarea>
+                </div>
+            </div>
+
+            <div class="issues-section">
+                <h3 class="section-title">🚨 Problemas Identificados</h3>
+                
+                <div class="issue-type">
+                    <h4 class="critical">🔴 Críticos</h4>
+                    <input type="text" class="issue-input" placeholder="Descreva problemas críticos encontrados..." data-persona="admin" data-type="critical">
+                </div>
+
+                <div class="issue-type">
+                    <h4 class="moderate">🟡 Moderados</h4>
+                    <input type="text" class="issue-input" placeholder="Descreva problemas moderados encontrados..." data-persona="admin" data-type="moderate">
+                </div>
+
+                <div class="issue-type">
+                    <h4 class="improvement">🟢 Melhorias</h4>
+                    <input type="text" class="issue-input" placeholder="Sugestões de melhorias..." data-persona="admin" data-type="improvement">
+                </div>
+            </div>
+
+            <div class="highlights-section">
+                <h3>⭐ Funcionalidades que Impressionam</h3>
+                <textarea class="notes-textarea" placeholder="Descreva funcionalidades que impressionaram positivamente..." data-persona="admin" data-type="highlights"></textarea>
+            </div>
+        </div>
+
+        <!-- Persona Instructor -->
+        <div id="instructor-content" class="persona-content">
+            <div class="persona-header">
+                <div class="persona-icon">👨‍🏫</div>
+                <div class="persona-info">
+                    <h2>Instructor/Admin</h2>
+                    <p>Maria Fernandes - Diretora Pedagógica</p>
+                    <p><strong>Objetivo:</strong> Criar cursos e gerenciar alunos</p>
+                </div>
+            </div>
+
+            <!-- Similar structure for instructor evaluation -->
+            <div class="evaluation-section">
+                <h3 class="section-title">📊 Critérios de Avaliação</h3>
+                <div class="criteria-grid">
+                    <!-- Same criteria structure but with instructor- prefixes -->
+                    <div class="criteria-item">Facilidade de Login</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="instructor-login" value="1" id="instructor-login-1">
+                        <label for="instructor-login-1">1</label>
+                        <input type="radio" name="instructor-login" value="2" id="instructor-login-2">
+                        <label for="instructor-login-2">2</label>
+                        <input type="radio" name="instructor-login" value="3" id="instructor-login-3">
+                        <label for="instructor-login-3">3</label>
+                        <input type="radio" name="instructor-login" value="4" id="instructor-login-4">
+                        <label for="instructor-login-4">4</label>
+                        <input type="radio" name="instructor-login" value="5" id="instructor-login-5">
+                        <label for="instructor-login-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre o login..."></textarea>
+
+                    <div class="criteria-item">Criação de Cursos</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="instructor-courses" value="1" id="instructor-courses-1">
+                        <label for="instructor-courses-1">1</label>
+                        <input type="radio" name="instructor-courses" value="2" id="instructor-courses-2">
+                        <label for="instructor-courses-2">2</label>
+                        <input type="radio" name="instructor-courses" value="3" id="instructor-courses-3">
+                        <label for="instructor-courses-3">3</label>
+                        <input type="radio" name="instructor-courses" value="4" id="instructor-courses-4">
+                        <label for="instructor-courses-4">4</label>
+                        <input type="radio" name="instructor-courses" value="5" id="instructor-courses-5">
+                        <label for="instructor-courses-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre criação de cursos..."></textarea>
+
+                    <div class="criteria-item">Gestão de Atividades</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="instructor-activities" value="1" id="instructor-activities-1">
+                        <label for="instructor-activities-1">1</label>
+                        <input type="radio" name="instructor-activities" value="2" id="instructor-activities-2">
+                        <label for="instructor-activities-2">2</label>
+                        <input type="radio" name="instructor-activities" value="3" id="instructor-activities-3">
+                        <label for="instructor-activities-3">3</label>
+                        <input type="radio" name="instructor-activities" value="4" id="instructor-activities-4">
+                        <label for="instructor-activities-4">4</label>
+                        <input type="radio" name="instructor-activities" value="5" id="instructor-activities-5">
+                        <label for="instructor-activities-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre atividades..."></textarea>
+
+                    <div class="criteria-item">Upload de Materiais</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="instructor-upload" value="1" id="instructor-upload-1">
+                        <label for="instructor-upload-1">1</label>
+                        <input type="radio" name="instructor-upload" value="2" id="instructor-upload-2">
+                        <label for="instructor-upload-2">2</label>
+                        <input type="radio" name="instructor-upload" value="3" id="instructor-upload-3">
+                        <label for="instructor-upload-3">3</label>
+                        <input type="radio" name="instructor-upload" value="4" id="instructor-upload-4">
+                        <label for="instructor-upload-4">4</label>
+                        <input type="radio" name="instructor-upload" value="5" id="instructor-upload-5">
+                        <label for="instructor-upload-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre uploads..."></textarea>
+
+                    <div class="criteria-item">Relatórios e Analytics</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="instructor-reports" value="1" id="instructor-reports-1">
+                        <label for="instructor-reports-1">1</label>
+                        <input type="radio" name="instructor-reports" value="2" id="instructor-reports-2">
+                        <label for="instructor-reports-2">2</label>
+                        <input type="radio" name="instructor-reports" value="3" id="instructor-reports-3">
+                        <label for="instructor-reports-3">3</label>
+                        <input type="radio" name="instructor-reports" value="4" id="instructor-reports-4">
+                        <label for="instructor-reports-4">4</label>
+                        <input type="radio" name="instructor-reports" value="5" id="instructor-reports-5">
+                        <label for="instructor-reports-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre relatórios..."></textarea>
+                </div>
+            </div>
+
+            <div class="issues-section">
+                <h3 class="section-title">🚨 Problemas Identificados</h3>
+                
+                <div class="issue-type">
+                    <h4 class="critical">🔴 Críticos</h4>
+                    <input type="text" class="issue-input" placeholder="Descreva problemas críticos encontrados..." data-persona="instructor" data-type="critical">
+                </div>
+
+                <div class="issue-type">
+                    <h4 class="moderate">🟡 Moderados</h4>
+                    <input type="text" class="issue-input" placeholder="Descreva problemas moderados encontrados..." data-persona="instructor" data-type="moderate">
+                </div>
+
+                <div class="issue-type">
+                    <h4 class="improvement">🟢 Melhorias</h4>
+                    <input type="text" class="issue-input" placeholder="Sugestões de melhorias..." data-persona="instructor" data-type="improvement">
+                </div>
+            </div>
+
+            <div class="highlights-section">
+                <h3>⭐ Funcionalidades que Impressionam</h3>
+                <textarea class="notes-textarea" placeholder="Descreva funcionalidades que impressionaram positivamente..." data-persona="instructor" data-type="highlights"></textarea>
+            </div>
+        </div>
+
+        <!-- Persona Student -->
+        <div id="student-content" class="persona-content">
+            <div class="persona-header">
+                <div class="persona-icon">👩‍🎓</div>
+                <div class="persona-info">
+                    <h2>Student</h2>
+                    <p>Ana Silva - Estudante de Marketing, 22 anos</p>
+                    <p><strong>Objetivo:</strong> Aprender de forma engajante</p>
+                </div>
+            </div>
+
+            <div class="evaluation-section">
+                <h3 class="section-title">📊 Critérios de Avaliação</h3>
+                <div class="criteria-grid">
+                    <div class="criteria-item">Facilidade de Matrícula</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="student-enrollment" value="1" id="student-enrollment-1">
+                        <label for="student-enrollment-1">1</label>
+                        <input type="radio" name="student-enrollment" value="2" id="student-enrollment-2">
+                        <label for="student-enrollment-2">2</label>
+                        <input type="radio" name="student-enrollment" value="3" id="student-enrollment-3">
+                        <label for="student-enrollment-3">3</label>
+                        <input type="radio" name="student-enrollment" value="4" id="student-enrollment-4">
+                        <label for="student-enrollment-4">4</label>
+                        <input type="radio" name="student-enrollment" value="5" id="student-enrollment-5">
+                        <label for="student-enrollment-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre matrícula..."></textarea>
+
+                    <div class="criteria-item">Experiência das Atividades</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="student-activities" value="1" id="student-activities-1">
+                        <label for="student-activities-1">1</label>
+                        <input type="radio" name="student-activities" value="2" id="student-activities-2">
+                        <label for="student-activities-2">2</label>
+                        <input type="radio" name="student-activities" value="3" id="student-activities-3">
+                        <label for="student-activities-3">3</label>
+                        <input type="radio" name="student-activities" value="4" id="student-activities-4">
+                        <label for="student-activities-4">4</label>
+                        <input type="radio" name="student-activities" value="5" id="student-activities-5">
+                        <label for="student-activities-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre atividades..."></textarea>
+
+                    <div class="criteria-item">Sistema de Gamificação</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="student-gamification" value="1" id="student-gamification-1">
+                        <label for="student-gamification-1">1</label>
+                        <input type="radio" name="student-gamification" value="2" id="student-gamification-2">
+                        <label for="student-gamification-2">2</label>
+                        <input type="radio" name="student-gamification" value="3" id="student-gamification-3">
+                        <label for="student-gamification-3">3</label>
+                        <input type="radio" name="student-gamification" value="4" id="student-gamification-4">
+                        <label for="student-gamification-4">4</label>
+                        <input type="radio" name="student-gamification" value="5" id="student-gamification-5">
+                        <label for="student-gamification-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre gamificação..."></textarea>
+
+                    <div class="criteria-item">Tracking de Progresso</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="student-progress" value="1" id="student-progress-1">
+                        <label for="student-progress-1">1</label>
+                        <input type="radio" name="student-progress" value="2" id="student-progress-2">
+                        <label for="student-progress-2">2</label>
+                        <input type="radio" name="student-progress" value="3" id="student-progress-3">
+                        <label for="student-progress-3">3</label>
+                        <input type="radio" name="student-progress" value="4" id="student-progress-4">
+                        <label for="student-progress-4">4</label>
+                        <input type="radio" name="student-progress" value="5" id="student-progress-5">
+                        <label for="student-progress-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre progresso..."></textarea>
+
+                    <div class="criteria-item">Leaderboard e Competição</div>
+                    <div class="rating-scale">
+                        <input type="radio" name="student-leaderboard" value="1" id="student-leaderboard-1">
+                        <label for="student-leaderboard-1">1</label>
+                        <input type="radio" name="student-leaderboard" value="2" id="student-leaderboard-2">
+                        <label for="student-leaderboard-2">2</label>
+                        <input type="radio" name="student-leaderboard" value="3" id="student-leaderboard-3">
+                        <label for="student-leaderboard-3">3</label>
+                        <input type="radio" name="student-leaderboard" value="4" id="student-leaderboard-4">
+                        <label for="student-leaderboard-4">4</label>
+                        <input type="radio" name="student-leaderboard" value="5" id="student-leaderboard-5">
+                        <label for="student-leaderboard-5">5</label>
+                    </div>
+                    <textarea class="notes-textarea" placeholder="Observações sobre leaderboard..."></textarea>
+                </div>
+            </div>
+
+            <div class="issues-section">
+                <h3 class="section-title">🚨 Problemas Identificados</h3>
+                
+                <div class="issue-type">
+                    <h4 class="critical">🔴 Críticos</h4>
+                    <input type="text" class="issue-input" placeholder="Descreva problemas críticos encontrados..." data-persona="student" data-type="critical">
+                </div>
+
+                <div class="issue-type">
+                    <h4 class="moderate">🟡 Moderados</h4>
+                    <input type="text" class="issue-input" placeholder="Descreva problemas moderados encontrados..." data-persona="student" data-type="moderate">
+                </div>
+
+                <div class="issue-type">
+                    <h4 class="improvement">🟢 Melhorias</h4>
+                    <input type="text" class="issue-input" placeholder="Sugestões de melhorias..." data-persona="student" data-type="improvement">
+                </div>
+            </div>
+
+            <div class="highlights-section">
+                <h3>⭐ Funcionalidades que Impressionam</h3>
+                <textarea class="notes-textarea" placeholder="Descreva funcionalidades que impressionaram positivamente..." data-persona="student" data-type="highlights"></textarea>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="summary-content" class="persona-content">
+            <div class="summary-section">
+                <h2>📊 Resumo Geral das Avaliações</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+                    <div>
+                        <h3>👨‍💼 Super Admin</h3>
+                        <div class="score-display" id="admin-score">--</div>
+                        <p>Score Geral</p>
+                    </div>
+                    <div>
+                        <h3>👨‍🏫 Instructor</h3>
+                        <div class="score-display" id="instructor-score">--</div>
+                        <p>Score Geral</p>
+                    </div>
+                    <div>
+                        <h3>👩‍🎓 Student</h3>
+                        <div class="score-display" id="student-score">--</div>
+                        <p>Score Geral</p>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <h3>🎯 Recomendações Prioritárias</h3>
+                    <div id="recommendations" style="text-align: left;">
+                        <p>Complete as avaliações para ver recomendações personalizadas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-buttons">
+            <button class="btn btn-primary" onclick="calculateScores()">📊 Calcular Scores</button>
+            <button class="btn btn-secondary" onclick="exportToJSON()">💾 Exportar JSON</button>
+            <button class="btn btn-secondary" onclick="generateReport()">📄 Gerar Relatório</button>
+            <button class="btn btn-secondary" onclick="resetAll()">🔄 Limpar Tudo</button>
+        </div>
+    </div>
+
+    <script>
+        let evaluationData = {
+            admin: {},
+            instructor: {},
+            student: {},
+            timestamp: new Date().toISOString()
+        };
+
+        function showPersona(persona) {
+            // Hide all contents
+            document.querySelectorAll('.persona-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.tab-button').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show selected content and activate tab
+            document.getElementById(persona + '-content').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update scores if showing summary
+            if (persona === 'summary') {
+                calculateScores();
+            }
+        }
+
+        function calculateScores() {
+            const personas = ['admin', 'instructor', 'student'];
+            
+            personas.forEach(persona => {
+                const ratings = document.querySelectorAll(`input[name^="${persona}-"]:checked`);
+                let total = 0;
+                let count = 0;
+                
+                ratings.forEach(rating => {
+                    total += parseInt(rating.value);
+                    count++;
+                });
+                
+                const score = count > 0 ? Math.round((total / count) * 20) : 0;
+                const scoreElement = document.getElementById(persona + '-score');
+                if (scoreElement) {
+                    scoreElement.textContent = score;
+                    scoreElement.style.color = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
+                }
+                
+                evaluationData[persona].score = score;
+                evaluationData[persona].totalRatings = count;
+            });
+            
+            generateRecommendations();
+        }
+
+        function generateRecommendations() {
+            const recommendationsEl = document.getElementById('recommendations');
+            let recommendations = [];
+            
+            // Analyze scores and generate recommendations
+            if (evaluationData.admin.score < 70) {
+                recommendations.push('🔧 Melhorar interface administrativa e reduzir complexidade');
+            }
+            if (evaluationData.instructor.score < 70) {
+                recommendations.push('📚 Simplificar criação de cursos e upload de materiais');
+            }
+            if (evaluationData.student.score < 70) {
+                recommendations.push('🎮 Aprimorar elementos de gamificação e engajamento');
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push('🎉 Excelente! Todas as personas têm boa experiência');
+            }
+            
+            recommendationsEl.innerHTML = recommendations.map(rec => `<p>${rec}</p>`).join('');
+        }
+
+        function collectAllData() {
+            const personas = ['admin', 'instructor', 'student'];
+            
+            personas.forEach(persona => {
+                evaluationData[persona] = {
+                    ratings: {},
+                    notes: {},
+                    issues: {
+                        critical: [],
+                        moderate: [],
+                        improvement: []
+                    },
+                    highlights: '',
+                    score: evaluationData[persona].score || 0,
+                    totalRatings: evaluationData[persona].totalRatings || 0
+                };
+                
+                // Collect ratings
+                const ratings = document.querySelectorAll(`input[name^="${persona}-"]:checked`);
+                ratings.forEach(rating => {
+                    const criteriaName = rating.name.replace(persona + '-', '');
+                    evaluationData[persona].ratings[criteriaName] = parseInt(rating.value);
+                });
+                
+                // Collect notes
+                const notes = document.querySelectorAll(`#${persona}-content .notes-textarea`);
+                notes.forEach((note, index) => {
+                    if (note.value.trim()) {
+                        evaluationData[persona].notes[`criteria_${index}`] = note.value.trim();
+                    }
+                });
+                
+                // Collect issues
+                const issues = document.querySelectorAll(`input[data-persona="${persona}"]`);
+                issues.forEach(issue => {
+                    const type = issue.getAttribute('data-type');
+                    if (issue.value.trim() && type !== 'highlights') {
+                        evaluationData[persona].issues[type].push(issue.value.trim());
+                    }
+                });
+                
+                // Collect highlights
+                const highlights = document.querySelector(`textarea[data-persona="${persona}"][data-type="highlights"]`);
+                if (highlights && highlights.value.trim()) {
+                    evaluationData[persona].highlights = highlights.value.trim();
+                }
+            });
+            
+            evaluationData.timestamp = new Date().toISOString();
+        }
+
+        function exportToJSON() {
+            collectAllData();
+            const dataStr = JSON.stringify(evaluationData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `avaliacao_ux_personas_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function generateReport() {
+            collectAllData();
+            
+            let report = `# Relatório de Avaliação UX por Personas
+            
+**Data:** ${new Date(evaluationData.timestamp).toLocaleString('pt-BR')}
+**Sistema:** SaaS Gamificação
+
+## Scores Gerais
+- 👨‍💼 Super Admin: ${evaluationData.admin.score}/100
+- 👨‍🏫 Instructor: ${evaluationData.instructor.score}/100  
+- 👩‍🎓 Student: ${evaluationData.student.score}/100
+
+## Detalhamento por Persona
+
+`;
+
+            const personas = [
+                {key: 'admin', name: 'Super Admin', icon: '👨‍💼'},
+                {key: 'instructor', name: 'Instructor', icon: '👨‍🏫'},
+                {key: 'student', name: 'Student', icon: '👩‍🎓'}
+            ];
+            
+            personas.forEach(persona => {
+                const data = evaluationData[persona.key];
+                report += `### ${persona.icon} ${persona.name}
+
+**Score:** ${data.score}/100
+
+**Ratings:**
+`;
+                Object.entries(data.ratings || {}).forEach(([criteria, rating]) => {
+                    report += `- ${criteria}: ${rating}/5\n`;
+                });
+                
+                if (data.issues.critical.length > 0) {
+                    report += `\n**🔴 Problemas Críticos:**\n`;
+                    data.issues.critical.forEach(issue => report += `- ${issue}\n`);
+                }
+                
+                if (data.issues.moderate.length > 0) {
+                    report += `\n**🟡 Problemas Moderados:**\n`;
+                    data.issues.moderate.forEach(issue => report += `- ${issue}\n`);
+                }
+                
+                if (data.highlights) {
+                    report += `\n**⭐ Destaques Positivos:**\n${data.highlights}\n`;
+                }
+                
+                report += `\n---\n\n`;
+            });
+            
+            const reportBlob = new Blob([report], {type: 'text/markdown'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(reportBlob);
+            link.download = `relatorio_ux_${new Date().toISOString().split('T')[0]}.md`;
+            link.click();
+        }
+
+        function resetAll() {
+            if (confirm('Tem certeza que deseja limpar todas as avaliações?')) {
+                document.querySelectorAll('input[type="radio"]').forEach(input => input.checked = false);
+                document.querySelectorAll('textarea, input[type="text"]').forEach(input => input.value = '');
+                evaluationData = {
+                    admin: {},
+                    instructor: {},
+                    student: {},
+                    timestamp: new Date().toISOString()
+                };
+                calculateScores();
+            }
+        }
+
+        // Auto-save functionality
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'radio' || e.target.type === 'textarea' || e.target.type === 'text') {
+                setTimeout(calculateScores, 100);
+            }
+        });
+    </script>
+</body>
+</html>
