@@ -40,9 +40,7 @@ export default function Landing({ canLogin, canRegister }) {
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="text-center">
                         <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl leading-tight">
-                            <span className="block text-3xl sm:text-4xl md:text-5xl text-blue-500 mb-2">Nova versão</span>
-                            <br />
-                            <span className="block">Transforme o&nbsp;aprendizado em</span>
+                            <span className="block">Nova versão - Transforme o&nbsp;aprendizado em</span>
                             <br />
                             <span className="text-blue-600 block">uma&nbsp;jornada&nbsp;épica</span>
                         </h1>
