@@ -41,8 +41,10 @@ export default function Landing({ canLogin, canRegister }) {
                     <div className="text-center">
                         <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl leading-tight">
                             <span className="block text-3xl sm:text-4xl md:text-5xl text-blue-500 mb-2">Nova versão</span>
-                            <span className="block">Transforme o aprendizado em</span>
-                            <span className="text-blue-600 block">uma jornada épica</span>
+                            <br />
+                            <span className="block">Transforme o&nbsp;aprendizado em</span>
+                            <br />
+                            <span className="text-blue-600 block">uma&nbsp;jornada&nbsp;épica</span>
                         </h1>
                         
                         <p className="mt-6 max-w-2xl mx-auto text-xl text-gray-600">
