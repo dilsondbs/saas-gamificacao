@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['php82', 'php82Packages.composer']
+nixPkgs = ['php82', 'php82Packages.composer', 'nodejs_20']
 cmds = [
     'mkdir -p bootstrap/cache',
     'mkdir -p storage/framework/{sessions,views,cache}',
