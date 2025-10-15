@@ -1,16 +1,19 @@
 [phases.setup]
 nixPkgs = ['php82', 'php82Packages.composer']
-
-[phases.build]
 cmds = [
     'mkdir -p bootstrap/cache',
     'mkdir -p storage/framework/{sessions,views,cache}',
     'mkdir -p storage/logs',
-    'chmod -R 775 bootstrap/cache storage',
-    'composer install --no-dev --optimize-autoloader',
-    'php artisan config:clear',
-    'php artisan route:clear',
-    'php artisan view:clear',
+    'chmod -R 777 bootstrap/cache storage'
+]
+
+[phases.install]
+cmds = [
+    'composer install --no-dev --optimize-autoloader'
+]
+
+[phases.build]
+cmds = [
     'npm ci',
     'npm run build'
 ]
