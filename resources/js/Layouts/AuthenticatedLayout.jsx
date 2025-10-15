@@ -3,27 +3,42 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 export default function Authenticated(props) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
-    
-    // Debug logs
-    console.log('AuthenticatedLayout props:', props);
-    
+    const isCentral = props.isCentral || false;
+
     // Safe extraction with defaults
     const auth = props.auth || {};
     const user = props.user;
     const header = props.header;
     const children = props.children;
-    
+
     // Use user prop directly if auth is not available
     const currentUser = user || auth.user || {};
-    
-    // Check if we're in central context
-    const isCentral = props.isCentral || window.location.pathname.startsWith('/central');
-    const logoutUrl = isCentral ? '/central-logout' : '/logout';
-    
+
+    // Logout handler - usar useCallback para evitar re-renders
+    const handleLogout = (e) => {
+        e.preventDefault();
+
+        // Usar método POST direto sem Ziggy
+        window.location.href = '/login';
+
+        // Fazer requisição de logout via fetch
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+        }).then(() => {
+            window.location.href = '/login';
+        }).catch(() => {
+            window.location.href = '/login';
+        });
+    };
+
     // Safety check for user object
     if (!currentUser || !currentUser.id) {
         console.log('No user found, showing loading...');
@@ -37,30 +52,49 @@ export default function Authenticated(props) {
                     <div className="flex justify-between h-16">
                         <div className="flex">
                             <div className="shrink-0 flex items-center">
-                                <Link href="/">
+                                <Link href={isCentral ? "/central/dashboard" : "/"}>
                                     <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
                                 </Link>
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                                {currentUser?.role === 'admin' && (
+                                {/* Central Navigation - Always show when in central context */}
+                                {isCentral && (
+                                    <>
+                                        <NavLink href="/central/dashboard" active={window.location.pathname === '/central/dashboard'}>
+                                            Painel Central
+                                        </NavLink>
+                                        <NavLink href="/central/tenants" active={window.location.pathname.startsWith('/central/tenants')}>
+                                            Clientes
+                                        </NavLink>
+                                        <NavLink href="/central/billing" active={window.location.pathname === '/central/billing'}>
+                                            Faturamento
+                                        </NavLink>
+                                        <NavLink href="/central/ai-usage" active={window.location.pathname === '/central/ai-usage'}>
+                                            Uso da API
+                                        </NavLink>
+                                    </>
+                                )}
+                                
+                                {/* Tenant Navigation */}
+                                {!isCentral && currentUser?.role === 'admin' && (
                                     <NavLink href="/admin/dashboard" active={window.location.pathname === '/admin/dashboard'}>
-                                        Dashboard
+                                        Painel
                                     </NavLink>
                                 )}
-                                {currentUser?.role === 'instructor' && (
+                                {!isCentral && currentUser?.role === 'instructor' && (
                                     <NavLink href="/instructor/dashboard" active={window.location.pathname === '/instructor/dashboard'}>
-                                        Dashboard
+                                        Painel
                                     </NavLink>
                                 )}
-                                {currentUser?.role === 'student' && (
+                                {!isCentral && currentUser?.role === 'student' && (
                                     <NavLink href="/student/dashboard" active={window.location.pathname === '/student/dashboard'}>
-                                        Dashboard
+                                        Painel
                                     </NavLink>
                                 )}
                                 
-                                {/* Student Navigation */}
-                                {currentUser?.role === 'student' && (
+                                {/* Student Navigation (only in tenant context) */}
+                                {!isCentral && currentUser?.role === 'student' && (
                                     <>
                                         <NavLink href="/student/courses" active={window.location.pathname === '/student/courses'}>
                                             Cursos
@@ -74,8 +108,8 @@ export default function Authenticated(props) {
                                     </>
                                 )}
                                 
-                                {/* Instructor Navigation */}
-                                {currentUser?.role === 'instructor' && (
+                                {/* Instructor Navigation (only in tenant context) */}
+                                {!isCentral && currentUser?.role === 'instructor' && (
                                     <>
                                         <NavLink href="/instructor/courses" active={window.location.pathname === '/instructor/courses'}>
                                             Meus Cursos
@@ -83,11 +117,14 @@ export default function Authenticated(props) {
                                         <NavLink href="/instructor/students" active={window.location.pathname === '/instructor/students'}>
                                             Alunos
                                         </NavLink>
+                                        <NavLink href="/eduai" active={window.location.pathname.startsWith('/eduai')}>
+                                            🤖 EduAI
+                                        </NavLink>
                                     </>
                                 )}
                                 
-                                {/* Admin Navigation */}
-                                {currentUser?.role === 'admin' && (
+                                {/* Admin Navigation (only in tenant context) */}
+                                {!isCentral && currentUser?.role === 'admin' && (
                                     <>
                                         <NavLink href="/admin/users" active={window.location.pathname.startsWith('/admin/users')}>
                                             Usuários
@@ -100,6 +137,9 @@ export default function Authenticated(props) {
                                         </NavLink>
                                         <NavLink href="/admin/activities" active={window.location.pathname.startsWith('/admin/activities')}>
                                             Atividades
+                                        </NavLink>
+                                        <NavLink href="/eduai" active={window.location.pathname.startsWith('/eduai')}>
+                                            🤖 EduAI
                                         </NavLink>
                                     </>
                                 )}
@@ -117,11 +157,13 @@ export default function Authenticated(props) {
                             
                             {/* User Role Badge */}
                             <div className={`mr-4 px-3 py-1 rounded-full text-xs font-medium ${
+                                isCentral ? 'bg-blue-100 text-blue-800' :
                                 currentUser?.role === 'admin' ? 'bg-red-100 text-red-800' :
                                 currentUser?.role === 'instructor' ? 'bg-purple-100 text-purple-800' :
                                 'bg-green-100 text-green-800'
                             }`}>
-                                {currentUser?.role === 'admin' ? '👑 Admin' :
+                                {isCentral ? '🏢 Gerente SaaS' :
+                                 currentUser?.role === 'admin' ? '👑 Administrador' :
                                  currentUser?.role === 'instructor' ? '👨‍🏫 Instrutor' :
                                  '🎓 Estudante'}
                             </div>
@@ -153,10 +195,13 @@ export default function Authenticated(props) {
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
-                                        <Dropdown.Link href="/profile">Profile</Dropdown.Link>
-                                        <Dropdown.Link href={logoutUrl} method="post" as="button">
-                                            Log Out
-                                        </Dropdown.Link>
+                                        <Dropdown.Link href="/profile">Perfil</Dropdown.Link>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out"
+                                        >
+                                            Sair
+                                        </button>
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
@@ -190,24 +235,43 @@ export default function Authenticated(props) {
 
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="pt-2 pb-3 space-y-1">
-                        {currentUser?.role === 'admin' && (
+                        {/* Central Mobile Navigation - Always show when in central context */}
+                        {isCentral && (
+                            <>
+                                <ResponsiveNavLink href="/central/dashboard" active={window.location.pathname === '/central/dashboard'}>
+                                    Painel Central
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink href="/central/tenants" active={window.location.pathname.startsWith('/central/tenants')}>
+                                    Clientes
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink href="/central/billing" active={window.location.pathname === '/central/billing'}>
+                                    Faturamento
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink href="/central/ai-usage" active={window.location.pathname === '/central/ai-usage'}>
+                                    Uso da API
+                                </ResponsiveNavLink>
+                            </>
+                        )}
+                        
+                        {/* Tenant Mobile Navigation */}
+                        {!isCentral && currentUser?.role === 'admin' && (
                             <ResponsiveNavLink href="/admin/dashboard" active={window.location.pathname === '/admin/dashboard'}>
-                                Dashboard
+                                Painel
                             </ResponsiveNavLink>
                         )}
-                        {currentUser?.role === 'instructor' && (
+                        {!isCentral && currentUser?.role === 'instructor' && (
                             <ResponsiveNavLink href="/instructor/dashboard" active={window.location.pathname === '/instructor/dashboard'}>
-                                Dashboard
+                                Painel
                             </ResponsiveNavLink>
                         )}
-                        {currentUser?.role === 'student' && (
+                        {!isCentral && currentUser?.role === 'student' && (
                             <ResponsiveNavLink href="/student/dashboard" active={window.location.pathname === '/student/dashboard'}>
-                                Dashboard
+                                Painel
                             </ResponsiveNavLink>
                         )}
                         
-                        {/* Student Mobile Navigation */}
-                        {currentUser.role === 'student' && (
+                        {/* Student Mobile Navigation (only in tenant context) */}
+                        {!isCentral && currentUser.role === 'student' && (
                             <>
                                 <ResponsiveNavLink href="/student/courses" active={window.location.pathname === '/student/courses'}>
                                     Cursos
@@ -221,8 +285,8 @@ export default function Authenticated(props) {
                             </>
                         )}
                         
-                        {/* Instructor Mobile Navigation */}
-                        {currentUser.role === 'instructor' && (
+                        {/* Instructor Mobile Navigation (only in tenant context) */}
+                        {!isCentral && currentUser.role === 'instructor' && (
                             <>
                                 <ResponsiveNavLink href="/instructor/courses" active={window.location.pathname === '/instructor/courses'}>
                                     Meus Cursos
@@ -233,8 +297,8 @@ export default function Authenticated(props) {
                             </>
                         )}
                         
-                        {/* Admin Mobile Navigation */}
-                        {currentUser.role === 'admin' && (
+                        {/* Admin Mobile Navigation (only in tenant context) */}
+                        {!isCentral && currentUser.role === 'admin' && (
                             <>
                                 <ResponsiveNavLink href="/admin/users" active={window.location.pathname.startsWith('/admin/users')}>
                                     Usuários
@@ -261,10 +325,13 @@ export default function Authenticated(props) {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href="/profile">Profile</ResponsiveNavLink>
-                            <ResponsiveNavLink method="post" href={logoutUrl} as="button">
-                                Log Out
-                            </ResponsiveNavLink>
+                            <ResponsiveNavLink href="/profile">Perfil</ResponsiveNavLink>
+                            <button
+                                onClick={handleLogout}
+                                className="block w-full pl-3 pr-4 py-2 border-l-4 border-transparent text-left text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out"
+                            >
+                                Sair
+                            </button>
                         </div>
                     </div>
                 </div>

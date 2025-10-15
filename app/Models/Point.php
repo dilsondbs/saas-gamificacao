@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\BelongsToTenant;
 class Point extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
         'user_id',
@@ -15,6 +16,7 @@ class Point extends Model
         'source_type',
         'source_id',
         'description',
+        'tenant_id',
     ];
 
     protected $casts = [

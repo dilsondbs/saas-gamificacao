@@ -9,9 +9,11 @@ use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\ActivityController as AdminActivityController;
 use App\Http\Controllers\Admin\BadgeController as AdminBadgeController;
 use App\Http\Controllers\Instructor\MaterialController;
-use App\Http\Controllers\Instructor\CourseController;
+use App\Http\Controllers\Instructor\CourseController as InstructorCourseController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstructorDashboardController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\FinalChallengeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -27,46 +29,119 @@ use Inertia\Inertia;
 |
 */
 
+// CSRF Token Refresh Route (deve estar antes de qualquer middleware)
+Route::get('/refresh-csrf', function () {
+    return response()->json([
+        'csrf_token' => csrf_token()
+    ]);
+})->name('refresh-csrf');
+
+// Root route - Landing page (handles both central and tenant contexts)
+Route::get('/', function () {
+    // Check if this is a central domain request
+    $host = request()->getHost();
+    $centralDomains = config('tenancy.central_domains', ['127.0.0.1', 'localhost', 'saas-gamificacao.local']);
+
+    // If this is a central domain, show central landing page
+    if (in_array($host, $centralDomains)) {
+        try {
+            // Buscar preços de catálogo atualizados (with error handling)
+            $catalogPrices = [];
+            try {
+                $catalogPrices = \App\Models\PlanPrice::pluck('price', 'plan_name')->toArray();
+            } catch (\Exception $e) {
+                \Log::warning('Could not load catalog prices: ' . $e->getMessage());
+            }
+
+            // Valores padrão caso não existam no banco
+            $defaultPrices = [
+                'teste' => 0.00,
+                'basic' => 19.90,
+                'premium' => 49.90,
+                'enterprise' => 199.00
+            ];
+
+            // Mesclar com valores padrão
+            $finalPrices = array_merge($defaultPrices, $catalogPrices);
+
+            return \Inertia\Inertia::render('Landing', [
+                'canLogin' => \Route::has('central.login'),
+                'canRegister' => true,
+                'catalogPrices' => $finalPrices
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Landing page error: ' . $e->getMessage());
+            return response('Erro na página inicial: ' . $e->getMessage(), 500);
+        }
+    }
+
+    // This is a TENANT domain - show tenant-specific landing/login
+    if (auth()->check()) {
+        $user = auth()->user();
+
+        // Ensure user belongs to current tenant (basic tenant isolation check)
+        $tenantContextService = app(\App\Services\TenantContextService::class);
+        $currentTenantId = $tenantContextService->getCurrentTenantId();
+
+        if ($user->tenant_id != $currentTenantId) {
+            auth()->logout();
+            return redirect('/login')->with('error', 'Acesso negado: usuário não pertence a este tenant.');
+        }
+
+        // Redirect based on user role within tenant
+        switch($user->role) {
+            case 'admin':
+                return redirect('/admin/dashboard');
+            case 'instructor':
+                return redirect('/instructor/dashboard');
+            case 'student':
+                return redirect('/student/dashboard');
+            default:
+                return redirect('/dashboard');
+        }
+    }
+
+    // If not authenticated, show tenant-specific landing page
+    $tenantContextService = app(\App\Services\TenantContextService::class);
+    $currentTenantId = $tenantContextService->getCurrentTenantId();
+
+    $tenantInfo = [
+        'domain' => $host,
+        'name' => ucfirst(str_replace(['.saas-gamificacao.local', '-'], [' ', ' '], $host)),
+        'message' => 'Bem-vindo à nossa plataforma de ensino gamificado'
+    ];
+
+    // Try to get real tenant information if available
+    if ($currentTenantId) {
+        try {
+            $tenant = \App\Models\Tenant::find($currentTenantId);
+            if ($tenant) {
+                $tenantInfo['name'] = $tenant->name ?: $tenantInfo['name'];
+                $tenantInfo['id'] = $tenant->id;
+            }
+        } catch (\Exception $e) {
+            // Use default values if tenant not found
+        }
+    }
+
+    return Inertia::render('TenantLanding', [
+        'isTenant' => true,
+        'tenantInfo' => $tenantInfo
+    ]);
+});
+
 // This file now contains tenant-specific routes
 // NOTE: Root route (/) is handled in central.php for central domains
 
-// Test route to debug auth issues
-Route::get('/test-auth-route', function() {
-    return 'Auth routes are loading!';
-});
 // For tenant domains, we can add a tenant-specific root route if needed
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        // Debug logging
-        \Log::info('Dashboard route accessed', [
-            'host' => request()->getHost(),
-            'user' => auth()->user()?->email,
-            'user_role' => auth()->user()?->role,
-        ]);
-        
-        // Check if we're in central context (domain-based check)
-        $host = request()->getHost();
-        $centralDomains = config('tenancy.central_domains');
-        
-        if (in_array($host, $centralDomains)) {
-            // Central context - redirect to central dashboard
-            \Log::info('Redirecting to central dashboard');
-            return redirect('/central/dashboard');
-        }
-        
-        // Tenant context - redirect based on user role
-        $user = auth()->user();
-        
-        \Log::info('Tenant context, user role: ' . $user?->role);
-        
-        return match ($user->role) {
-            'admin' => redirect('/admin/dashboard'),
-            'instructor' => redirect('/instructor/dashboard'),
-            'student' => redirect('/student/dashboard'),
-            default => Inertia::render('Dashboard')
-        };
-    })->name('dashboard');
+// Impersonate route (no auth required, uses token)
+Route::get('/impersonate/{token}', [App\Http\Controllers\ImpersonateController::class, 'loginWithToken'])
+    ->name('impersonate.token');
+
+Route::middleware(['auth', 'verified', 'temporary.password'])->group(function () {
+    // Main dashboard route using new DashboardController
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -74,21 +149,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Admin Routes
-Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'temporary.password', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    
+
     // User management
     Route::resource('users', AdminUserController::class);
-    
+
     // Course management
     Route::resource('courses', AdminCourseController::class);
-    
+
     // Activity management
     Route::resource('activities', AdminActivityController::class);
-    
+
     // Badge management
     Route::resource('badges', AdminBadgeController::class);
-	
+});
+
+// EduAI Routes (para instructors)
+Route::middleware(['auth', 'verified', 'temporary.password', 'eduai.access'])->prefix('eduai')->name('eduai.')->group(function () {
+    Route::get('/', [App\Http\Controllers\EduAIController::class, 'index'])->name('dashboard');
+    Route::get('/generate-complete', [App\Http\Controllers\EduAIController::class, 'generateComplete'])->name('generate-complete');
+    Route::get('/canvas/{canvasId?}', [App\Http\Controllers\EduAIController::class, 'showCanvas'])->name('canvas');
+    Route::post('/generate-course', [App\Http\Controllers\EduAIController::class, 'generateCourse'])->name('generate-course');
+    Route::post('/generate-course-from-file', [App\Http\Controllers\EduAIController::class, 'generateCourseFromFile'])->name('generate-course-from-file');
+    Route::post('/generate-activities', [App\Http\Controllers\EduAIController::class, 'generateActivities'])->name('generate-activities');
+    Route::post('/generate-badges', [App\Http\Controllers\EduAIController::class, 'generateBadges'])->name('generate-badges');
+    Route::post('/generate-canvas', [App\Http\Controllers\EduAIController::class, 'generateCanvas'])->name('generate-canvas');
+    Route::post('/generate-complete-package', [App\Http\Controllers\EduAIController::class, 'generateCompletePackage'])->name('generate-complete-package');
+    Route::post('/save-course', [App\Http\Controllers\EduAIController::class, 'saveCourse'])->name('save-course');
+    Route::post('/save-canvas', [App\Http\Controllers\EduAIController::class, 'saveCanvas'])->name('save-canvas');
 });
 
 
@@ -97,7 +186,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
 
 // Instructor Routes
-Route::middleware(['auth', 'verified', 'role:instructor'])->prefix('instructor')->name('instructor.')->group(function () {
+Route::middleware(['auth', 'verified', 'temporary.password', 'role:instructor'])->prefix('instructor')->name('instructor.')->group(function () {
     Route::get('/dashboard', [InstructorDashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/courses', [InstructorDashboardController::class, 'courses'])->name('courses');
     Route::get('/students', [InstructorDashboardController::class, 'students'])->name('students');
@@ -136,72 +225,136 @@ Route::middleware(['auth', 'verified', 'role:instructor'])->prefix('instructor')
         ->name('courses.generate');
     
     // AI Course Generation from Content
-    Route::get('courses/ai/create', [CourseController::class, 'createWithAI'])
+    Route::get('courses/ai/create', [InstructorCourseController::class, 'createWithAI'])
         ->name('courses.ai.create');
-    Route::post('courses/ai/generate', [CourseController::class, 'generateFromContent'])
+    Route::post('courses/ai/generate', [InstructorCourseController::class, 'generateFromContent'])
         ->name('courses.ai.generate');
-    Route::post('courses/ai/preview', [CourseController::class, 'previewGenerated'])
+    Route::post('courses/ai/preview', [InstructorCourseController::class, 'previewGenerated'])
         ->name('courses.ai.preview');
 });
 
-// Student Routes (middleware temporariamente removido para teste)
-Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {
+// Course Routes (Available for instructors and admins)
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Course CRUD routes
+    Route::resource('courses', CourseController::class);
+
+    // Additional course actions
+    Route::post('courses/{course}/duplicate', [CourseController::class, 'duplicate'])->name('courses.duplicate');
+    Route::post('courses/{course}/publish', [CourseController::class, 'publish'])->name('courses.publish');
+    Route::post('courses/{course}/archive', [CourseController::class, 'archive'])->name('courses.archive');
+
+    // AI Course Generation
+    Route::post('courses/generate-ai', [CourseController::class, 'generateFromAI'])->name('courses.generate-ai');
+
+    // Material Upload and Processing (Enhanced)
+    Route::post('courses/{course}/upload-material', [CourseController::class, 'uploadMaterial'])->name('courses.upload-material');
+
+    // Modern Material Upload Interface
+    Route::get('courses/{course}/materials/upload', [App\Http\Controllers\MaterialUploadController::class, 'show'])->name('materials.upload.show');
+    Route::post('courses/{course}/materials/upload', [App\Http\Controllers\MaterialUploadController::class, 'upload'])->name('materials.upload.store');
+    Route::post('courses/{course}/materials/generate', [App\Http\Controllers\MaterialUploadController::class, 'generateActivities'])->name('materials.generate');
+    Route::post('materials/validate', [App\Http\Controllers\MaterialUploadController::class, 'validateFile'])->name('materials.validate');
+    Route::get('materials/{material}/preview', [App\Http\Controllers\MaterialUploadController::class, 'preview'])->name('materials.preview');
+    Route::delete('materials/{material}', [App\Http\Controllers\MaterialUploadController::class, 'delete'])->name('materials.delete');
+});
+
+// Student Routes
+Route::middleware(['auth', 'verified', 'temporary.password', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     Route::post('/enroll/{course}', [StudentDashboardController::class, 'enrollCourse'])->name('enroll');
-    
-    // Additional student routes
     Route::get('/courses', [StudentDashboardController::class, 'courses'])->name('courses');
     Route::get('/courses/{course}', [StudentDashboardController::class, 'showCourse'])->name('courses.show');
-    Route::get('/activities/{activity}', [StudentDashboardController::class, 'showActivity'])->name('activities.show');
-    Route::get('/quiz/{activity}', [StudentDashboardController::class, 'showActivity'])->name('quiz.show'); // Manter compatibilidade
-    Route::post('/quiz/{activity}', [StudentDashboardController::class, 'submitQuiz'])->name('quiz.submit');
-    
-    Route::get('/progress', function () {
-        return Inertia::render('Student/Progress');
-    })->name('progress');
-    
     Route::get('/badges', [StudentDashboardController::class, 'badges'])->name('badges');
     Route::get('/leaderboard', [StudentDashboardController::class, 'leaderboard'])->name('leaderboard');
+
+    // Desafio Final
+    Route::prefix('courses/{course}/challenge')->name('challenge.')->group(function () {
+        Route::get('/', [FinalChallengeController::class, 'show'])->name('show');
+        Route::post('/start', [FinalChallengeController::class, 'start'])->name('start');
+        Route::post('/submit', [FinalChallengeController::class, 'submit'])->name('submit');
+        Route::post('/motivation/send', [FinalChallengeController::class, 'sendMotivation'])->name('motivation.send');
+    });
+
+    Route::post('/motivation/{motivation}/confirm', [FinalChallengeController::class, 'confirmMotivation'])->name('challenge.motivation.confirm');
 });
 
-// Rota de teste sem middleware
-Route::get('/teste-dashboard', function() {
-    return Inertia::render('Student/Dashboard');
+// ROTAS DE TESTE REMOVIDAS POR SEGURANÇA
+// Essas rotas permitiam bypass de autenticação e vazamento de dados entre tenants
+// Removidas em: 2025-09-22 para correção definitiva do sistema multi-tenant
+
+
+
+// Public store routes (for tenant sales pages) - APENAS PARA TENANTS
+// NOTA: A rota '/' será adicionada apenas no tenant.php para não conflitar com central
+
+// Progress and Unlock System Routes
+Route::middleware(['auth', 'verified'])->prefix('progress')->name('progress.')->group(function () {
+    // Check activity access
+    Route::get('/activity/{activity}/check', [App\Http\Controllers\ProgressController::class, 'checkActivityAccess'])->name('activity.check');
+
+    // Check course progression
+    Route::get('/course/{course}', [App\Http\Controllers\ProgressController::class, 'checkCourseProgression'])->name('course.check');
+
+    // Complete activity
+    Route::post('/activity/{activity}/complete', [App\Http\Controllers\ProgressController::class, 'completeActivity'])->name('activity.complete');
+
+    // User overall progress
+    Route::get('/user/overall', [App\Http\Controllers\ProgressController::class, 'getUserOverallProgress'])->name('user.overall');
 });
 
-// Rota de teste para arquivo
-Route::get('/test-file', function() {
-    $firstFile = '7DbDVqrcn8D3gidFm5FRo9sSSgqbtpLjR5n4GlJE.pdf';
-    $path = storage_path('app/public/course_materials/' . $firstFile);
-    
-    if (!file_exists($path)) {
-        return response('Arquivo não encontrado', 404);
-    }
-    
-    return response()->file($path, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="' . $firstFile . '"'
-    ]);
+// Gamification System Routes
+Route::middleware(['auth', 'verified'])->prefix('gamification')->name('gamification.')->group(function () {
+    // Process gamification events
+    Route::post('/activity/completed', [App\Http\Controllers\GameController::class, 'processActivityCompletion'])->name('activity.completed');
+    Route::post('/course/enrolled', [App\Http\Controllers\GameController::class, 'processCourseEnrollment'])->name('course.enrolled');
+    Route::post('/course/completed', [App\Http\Controllers\GameController::class, 'processCourseCompletion'])->name('course.completed');
+
+    // User gamification status
+    Route::get('/user/{user}/status', [App\Http\Controllers\GameController::class, 'getUserGamificationStatus'])->name('user.status');
+    Route::post('/user/{user}/recalculate', [App\Http\Controllers\GameController::class, 'recalculateUserGamification'])->name('user.recalculate');
+
+    // Leaderboard and rankings
+    Route::get('/leaderboard', [App\Http\Controllers\GameController::class, 'getLeaderboard'])->name('leaderboard');
+    Route::get('/user/{user}/rank', [App\Http\Controllers\GameController::class, 'getUserRank'])->name('user.rank');
+
+    // Notifications
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'getUserNotifications'])->name('notifications.index');
+    Route::post('/notifications/{notificationId}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::delete('/notifications', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('notifications.clear');
 });
 
-// Test routes for development (REMOVE IN PRODUCTION)
-Route::get('/test-login-admin', function() {
-    $admin = \App\Models\User::where('role', 'admin')->first();
-    if (!$admin) {
-        return response('Admin não encontrado', 404);
-    }
-    \Illuminate\Support\Facades\Auth::login($admin);
-    return redirect('/admin/dashboard');
+// Student Activity Routes with Progression Check
+Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
+    // Activity access with progression middleware
+    Route::get('/activities/{activity}', [StudentDashboardController::class, 'showActivity'])
+        ->middleware('progression.check')
+        ->name('activities.show');
+
+    // Quiz routes with progression check
+    Route::get('/quiz/{activity}', [StudentDashboardController::class, 'showActivity'])
+        ->middleware('progression.check')
+        ->name('quiz.show');
+
+    Route::post('/quiz/{activity}', [StudentDashboardController::class, 'submitQuiz'])
+        ->middleware('progression.check')
+        ->name('quiz.submit');
+
+    // Activity list (no restriction)
+    Route::get('/activities', [StudentDashboardController::class, 'activities'])->name('activities.index');
 });
 
-Route::get('/test-login-student', function() {
-    $student = \App\Models\User::where('role', 'student')->first();
-    if (!$student) {
-        return response('Estudante não encontrado', 404);
-    }
-    \Illuminate\Support\Facades\Auth::login($student);
-    return redirect('/student/courses');
+// Tenant Cancellation Routes (only available in tenant context)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/account/cancel', [App\Http\Controllers\TenantCancellationController::class, 'showCancellationForm'])->name('tenant.cancel.form');
+    Route::post('/account/cancel', [App\Http\Controllers\TenantCancellationController::class, 'processCancellation'])->name('tenant.cancel.process');
+    Route::post('/account/restore', [App\Http\Controllers\TenantCancellationController::class, 'restoreTenant'])->name('tenant.restore');
 });
+
+
+
+
+
+
 
 // Authentication routes for both central and tenant contexts
 require __DIR__.'/auth.php';

@@ -33,14 +33,16 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-            // Load central routes first (with higher priority)
-            Route::middleware('web')
-                ->group(base_path('routes/central.php'));
-            
-            // Load shared web routes (including auth) for all contexts
-            // Only if not in central context to avoid conflicts
+            // Carregar rotas web normais (migração para banco único)
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            // Central routes (prefixo já definido dentro de routes/central.php)
+            Route::middleware('web')
+                ->group(base_path('routes/central.php'));
+
+            // Rotas centrais foram migradas para web.php no sistema de banco único
+            // Central routes have been migrated to web.php in the single database system
         });
     }
 

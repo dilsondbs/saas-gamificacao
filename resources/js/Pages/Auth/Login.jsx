@@ -28,7 +28,7 @@ export default function Login({ status, canResetPassword, isCentral }) {
         e.preventDefault();
 
         // Use central-login route if in central context, otherwise regular login
-        const loginRoute = isCentral ? '/central-login' : route('login');
+        const loginRoute = isCentral ? '/central-login' : '/login';
         post(loginRoute);
     };
 
@@ -95,7 +95,7 @@ export default function Login({ status, canResetPassword, isCentral }) {
                     
                     {canResetPassword && (
                         <Link
-                            href={route('password.request')}
+                            href="/forgot-password"
                             className="text-sm text-blue-600 hover:text-blue-500 transition-colors duration-200"
                         >
                             Esqueceu a senha?
@@ -127,7 +127,7 @@ export default function Login({ status, canResetPassword, isCentral }) {
                     <p className="text-sm text-gray-600">
                         Ainda não tem uma conta?{' '}
                         <Link
-                            href={route('register')}
+                            href="/signup"
                             className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
                         >
                             Criar conta grátis

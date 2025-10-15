@@ -6,13 +6,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
-        "guzzlehttp/guzzle": "^7.2",
+        "guzzlehttp/guzzle": "*",
         "inertiajs/inertia-laravel": "^0.6.3",
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.2",
         "laravel/tinker": "^2.7",
-        "smalot/pdfparser": "^2.12.1",
-        "stancl/tenancy": "^3.8.5",
+        "predis/predis": "^3.2",
+        "smalot/pdfparser": "^2.12",
         "tightenco/ziggy": "^1.0"
     },
     "require-dev": {
@@ -30,7 +30,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/tenant_helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

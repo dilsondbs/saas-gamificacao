@@ -17,7 +17,7 @@ class AICourseGeneratorService
     protected $contentExtractor;
     private $client;
     private $apiKey;
-    private $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    private $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
     public function __construct()
     {
@@ -454,6 +454,7 @@ class AICourseGeneratorService
 
                 $activity = Activity::create([
                     'course_id' => $course->id,
+                    'tenant_id' => $course->tenant_id,
                     'title' => $activityData['title'],
                     'description' => $activityData['description'],
                     'type' => $activityData['type'],
@@ -488,7 +489,8 @@ class AICourseGeneratorService
                 'activities_completed' => 1
             ]),
             'points_value' => 50,
-            'is_active' => true
+            'is_active' => true,
+            'tenant_id' => $course->tenant_id
         ]);
         $createdBadges[] = $startBadge;
 
@@ -504,7 +506,8 @@ class AICourseGeneratorService
                 'activities_completed' => ceil(count($courseStructure) * 3 / 2) // 50% das atividades
             ]),
             'points_value' => 100,
-            'is_active' => true
+            'is_active' => true,
+            'tenant_id' => $course->tenant_id
         ]);
         $createdBadges[] = $midBadge;
 
@@ -520,7 +523,8 @@ class AICourseGeneratorService
                 'course_completed' => true
             ]),
             'points_value' => 200,
-            'is_active' => true
+            'is_active' => true,
+            'tenant_id' => $course->tenant_id
         ]);
         $createdBadges[] = $completionBadge;
 
@@ -722,6 +726,7 @@ class AICourseGeneratorService
             'description' => $courseData['description'],
             'points_per_completion' => $courseData['points_per_completion'],
             'instructor_id' => $courseData['instructor_id'],
+            'tenant_id' => $courseData['tenant_id'] ?? auth()->user()->tenant_id,
             'status' => 'draft'
         ]);
 
@@ -733,6 +738,7 @@ class AICourseGeneratorService
             foreach ($module['activities'] as $activityData) {
                 $activity = Activity::create([
                     'course_id' => $course->id,
+                    'tenant_id' => $course->tenant_id,
                     'title' => $activityData['title'],
                     'description' => $activityData['description'],
                     'type' => $activityData['type'],

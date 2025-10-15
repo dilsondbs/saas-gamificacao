@@ -36,23 +36,73 @@ class UserController extends Controller
         $sortDirection = $request->get('direction', 'desc');
         $query->orderBy($sortField, $sortDirection);
 
-        $users = $query->paginate(15)
-            ->withQueryString()
-            ->through(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'total_points' => $user->total_points,
-                    'email_verified_at' => $user->email_verified_at,
-                    'created_at' => $user->created_at,
-                    'enrollments_count' => CourseEnrollment::where('user_id', $user->id)->count(),
-                    'badges_count' => UserBadge::where('user_id', $user->id)->count(),
-                    'activities_completed' => UserActivity::where('user_id', $user->id)
-                        ->whereNotNull('completed_at')->count(),
-                ];
-            });
+        // Get paginated users
+        $users = $query->paginate(15)->withQueryString();
+
+        // Get user IDs for batch loading related data
+        $userIds = $users->pluck('id');
+
+        // Batch load enrollment counts
+        $enrollmentCounts = [];
+        if ($userIds->isNotEmpty()) {
+            try {
+                $enrollments = CourseEnrollment::whereIn('user_id', $userIds)
+                    ->selectRaw('user_id, count(*) as count')
+                    ->groupBy('user_id')
+                    ->pluck('count', 'user_id');
+                $enrollmentCounts = $enrollments->toArray();
+            } catch (\Exception $e) {
+                \Log::warning('Error loading enrollments: ' . $e->getMessage());
+                $enrollmentCounts = [];
+            }
+        }
+
+        // Batch load badge counts
+        $badgeCounts = [];
+        if ($userIds->isNotEmpty()) {
+            try {
+                $badges = UserBadge::whereIn('user_id', $userIds)
+                    ->selectRaw('user_id, count(*) as count')
+                    ->groupBy('user_id')
+                    ->pluck('count', 'user_id');
+                $badgeCounts = $badges->toArray();
+            } catch (\Exception $e) {
+                \Log::warning('Error loading badges: ' . $e->getMessage());
+                $badgeCounts = [];
+            }
+        }
+
+        // Batch load activity counts
+        $activityCounts = [];
+        if ($userIds->isNotEmpty()) {
+            try {
+                $activities = UserActivity::whereIn('user_id', $userIds)
+                    ->whereNotNull('completed_at')
+                    ->selectRaw('user_id, count(*) as count')
+                    ->groupBy('user_id')
+                    ->pluck('count', 'user_id');
+                $activityCounts = $activities->toArray();
+            } catch (\Exception $e) {
+                \Log::warning('Error loading activities: ' . $e->getMessage());
+                $activityCounts = [];
+            }
+        }
+
+        // Transform users with loaded data
+        $users->through(function ($user) use ($enrollmentCounts, $badgeCounts, $activityCounts) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'total_points' => $user->total_points ?? 0,
+                'email_verified_at' => $user->email_verified_at,
+                'created_at' => $user->created_at,
+                'enrollments_count' => $enrollmentCounts[$user->id] ?? 0,
+                'badges_count' => $badgeCounts[$user->id] ?? 0,
+                'activities_completed' => $activityCounts[$user->id] ?? 0,
+            ];
+        });
 
         $stats = [
             'total' => User::count(),
@@ -95,8 +145,10 @@ class UserController extends Controller
             ->with('success', 'Usuário criado com sucesso!');
     }
 
-    public function show(User $user)
+    public function show($userId)
     {
+        // CORREÇÃO: Bypass route model binding e buscar diretamente
+        $user = User::findOrFail($userId);
         $user->load(['enrollments.course', 'badges.badge', 'activities.activity']);
 
         $stats = [
@@ -121,15 +173,20 @@ class UserController extends Controller
         ]);
     }
 
-    public function edit(User $user)
+    public function edit($userId)
     {
+        // CORREÇÃO: Bypass route model binding e buscar diretamente
+        $user = User::findOrFail($userId);
+
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user->only(['id', 'name', 'email', 'role', 'total_points']),
         ]);
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, $userId)
     {
+        // CORREÇÃO: Bypass route model binding e buscar diretamente
+        $user = User::findOrFail($userId);
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -148,8 +205,11 @@ class UserController extends Controller
             ->with('success', 'Usuário atualizado com sucesso!');
     }
 
-    public function destroy(User $user)
+    public function destroy($userId)
     {
+        // CORREÇÃO: Bypass route model binding e buscar diretamente
+        $user = User::findOrFail($userId);
+
         // Prevent deleting the current user
         if ($user->id === auth()->id()) {
             return redirect()->route('admin.users.index')

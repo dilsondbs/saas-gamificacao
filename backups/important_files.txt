@@ -1,0 +1,74 @@
+LISTA DE ARQUIVOS IMPORTANTES - BACKUP PASSO 1
+============================================
+
+CONTROLLERS (app/Http/Controllers/):
+==================================
+Admin/
+- ActivityController.php
+- BadgeController.php
+- CourseController.php
+- DashboardController.php
+- UserController.php
+
+Api/
+- LeaderboardController.php
+
+Auth/
+- AuthenticatedSessionController.php
+- ConfirmablePasswordController.php
+- EmailVerificationNotificationController.php
+- EmailVerificationPromptController.php
+- NewPasswordController.php
+- PasswordChangeController.php
+- PasswordController.php
+- PasswordResetLinkController.php
+- RegisteredUserController.php
+- VerifyEmailController.php
+
+Central/
+- BillingController.php
+- BillingController_original.php
+- DashboardController.php
+- RegistrationController.backup.php
+- RegistrationController.php
+- TenantController.php
+
+Instructor/
+- CourseController.php
+- MaterialController.php
+
+Public/
+- StoreController.php
+
+Student/
+- DashboardController.php
+
+Raiz Controllers/
+- AdminDashboardController.php
+- Controller.php
+- CourseController.php
+- DashboardController.php
+- EduAIController.php
+- GameController.php
+- ImpersonateController.php
+- InstructorDashboardController.php
+- MaterialUploadController.php
+- NotificationController.php
+- ProfileController.php
+- ProgressController.php
+- StudentDashboardController.php
+- TenantCancellationController.php
+- UserInvitationController.php
+
+COMPONENTES REACT (resources/js/Pages/EduAI/):
+============================================
+- Canvas.jsx
+- Dashboard.jsx
+- GenerateComplete.jsx
+
+ROTAS:
+======
+- routes/tenant.php EXISTE ✓
+
+TOTAL DE CONTROLLERS: 40 arquivos
+TOTAL DE COMPONENTES EDUAI: 3 arquivos JSX

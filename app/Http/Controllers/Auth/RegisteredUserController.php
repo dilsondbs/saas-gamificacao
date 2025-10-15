@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use App\Services\TenantContextService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,14 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        // Check if we're in central context
+        $host = request()->getHost();
+        $centralDomains = config('tenancy.central_domains');
+        $isCentral = in_array($host, $centralDomains);
+        
+        return Inertia::render('Auth/Register', [
+            'isCentral' => $isCentral,
+        ]);
     }
 
     /**
@@ -37,12 +45,22 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // CRÍTICO: Obter tenant_id do contexto atual
+        $tenantContextService = app(TenantContextService::class);
+        $tenantId = $tenantContextService->getCurrentTenantId();
+
+        // SEGURANÇA: Impedir criação de usuários órfãos
+        if (!$tenantId) {
+            throw new \Exception('Não é possível registrar usuário sem contexto de tenant definido.');
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'student',
             'total_points' => 0,
+            'tenant_id' => $tenantId, // CORREÇÃO CRÍTICA: Sempre incluir tenant_id
         ]);
 
         event(new Registered($user));

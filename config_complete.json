@@ -1,0 +1,87 @@
+{
+    "app": {
+        "name": "SaaS Gamificacao",
+        "env": "local",
+        "debug": true,
+        "url": "http://127.0.0.1:8000",
+        "timezone": "UTC",
+        "locale": "pt_BR",
+        "fallback_locale": "en"
+    },
+    "database": {
+        "default": "mysql",
+        "mysql": {
+            "driver": "mysql",
+            "host": "127.0.0.1",
+            "port": "3306",
+            "database": "saas_gamificacao",
+            "username": "root",
+            "password": "",
+            "charset": "utf8mb4",
+            "collation": "utf8mb4_unicode_ci"
+        }
+    },
+    "tenancy": {
+        "central_domains": [
+            "127.0.0.1",
+            "localhost",
+            "saas-gamificacao.local"
+        ],
+        "tenant_domain_pattern": "{tenant}.saas-gamificacao.local",
+        "database": {
+            "tenant_column": "tenant_id",
+            "auto_filter": true
+        }
+    },
+    "services": {
+        "gemini": {
+            "api_key_configured": true,
+            "api_key": "AIzaSyDlTq6sUQAAOn472LR34tSUNrg265aU9mY"
+        }
+    },
+    "ai_services": {
+        "python_ai_service_url": "http://localhost:8001",
+        "eduai_service_url": "http://localhost:8001"
+    },
+    "cache": {
+        "default": "file",
+        "stores": ["apc", "array", "database", "file", "memcached", "redis", "dynamodb", "octane"]
+    },
+    "queue": {
+        "default": "sync",
+        "connections": ["sync", "database", "beanstalkd", "sqs", "redis"]
+    },
+    "session": {
+        "driver": "file",
+        "lifetime": 120,
+        "domain": ".saas-gamificacao.local",
+        "cookie": "saas_gamificacao_session",
+        "http_only": true,
+        "same_site": "lax",
+        "secure": false,
+        "path": "storage/framework/sessions"
+    },
+    "mail": {
+        "default": "smtp",
+        "host": "mailpit",
+        "port": 1025,
+        "encryption": null,
+        "from": {
+            "address": "hello@example.com",
+            "name": "SaaS Gamificacao"
+        }
+    },
+    "filesystem": {
+        "default": "local",
+        "disks": ["local", "public", "s3"]
+    },
+    "providers": {
+        "total": 26,
+        "custom": [
+            "App\Providers\AppServiceProvider",
+            "App\Providers\AuthServiceProvider",
+            "App\Providers\EventServiceProvider",
+            "App\Providers\RouteServiceProvider"
+        ]
+    }
+}

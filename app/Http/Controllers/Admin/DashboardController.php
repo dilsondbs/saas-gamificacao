@@ -11,6 +11,7 @@ use App\Models\Activity;
 use App\Models\CourseEnrollment;
 use App\Models\UserActivity;
 use App\Models\UserBadge;
+use App\Services\TenantContextService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -20,23 +21,32 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $generalStats = $this->getGeneralStats();
-        $engagementMetrics = $this->getEngagementMetrics();
-        $topUsers = $this->getTopUsers();
-        $topCourses = $this->getTopCourses();
-        $chartData = $this->getChartData();
+        // CORREÇÃO CRÍTICA: Verificar contexto de tenant
+        $tenantContextService = app(TenantContextService::class);
 
-        return Inertia::render('Admin/Dashboard', [
-            'generalStats' => $generalStats,
-            'engagementMetrics' => $engagementMetrics,
-            'topUsers' => $topUsers,
-            'topCourses' => $topCourses,
-            'chartData' => $chartData,
-        ]);
+        try {
+            return Inertia::render('Admin/DashboardFixed', [
+                'generalStats' => $this->getGeneralStats(),
+                'engagementMetrics' => $this->getEngagementMetrics(),
+                'topUsers' => $this->getTopUsers(),
+                'topCourses' => $this->getTopCourses(),
+                'chartData' => $this->getChartData(),
+                'tenantInfo' => [
+                    'tenant_id' => $tenantContextService->getCurrentTenantId(),
+                    'is_central' => $tenantContextService->isCentralContext(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Admin Dashboard Error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
     }
 
     private function getGeneralStats()
     {
+        // CORREÇÃO CRÍTICA: Queries agora respeitam automaticamente o tenant_id via global scope
+        // Os models com BelongsToTenant trait filtrarão automaticamente por tenant
         return [
             'totalUsers' => User::count(),
             'totalStudents' => User::where('role', 'student')->count(),

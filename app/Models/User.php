@@ -6,12 +6,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-    // Note: BelongsToTenant não é necessário pois cada tenant tem sua própria base de dados
+    // Modelo User em banco único com tenant_id
 
     /**
      * The attributes that are mass assignable.
@@ -24,6 +26,11 @@ class User extends Authenticatable
         'password',
         'role',
         'total_points',
+        'password_is_temporary',
+        'password_changed_at',
+        'last_login_at',
+        'temporary_token',
+        'tenant_id',
     ];
 
     /**
@@ -44,7 +51,18 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'total_points' => 'integer',
+        'password_is_temporary' => 'boolean',
+        'password_changed_at' => 'datetime',
+        'last_login_at' => 'datetime',
     ];
+
+    /**
+     * Relacionamento com o tenant
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
 
     public function isAdmin()
     {
@@ -99,8 +117,54 @@ class User extends Authenticatable
 
     public function updateTotalPoints()
     {
-        $totalPoints = $this->points()->where('type', 'earned')->sum('points') 
+        $totalPoints = $this->points()->where('type', 'earned')->sum('points')
                      - $this->points()->where('type', 'spent')->sum('points');
         $this->update(['total_points' => max(0, $totalPoints)]);
+    }
+
+    /**
+     * Generate a temporary password and token for first access
+     */
+    public function generateTemporaryPassword()
+    {
+        $temporaryPassword = Str::random(8);
+        $token = Str::random(32);
+
+        $this->update([
+            'password' => Hash::make($temporaryPassword),
+            'password_is_temporary' => true,
+            'temporary_token' => $token,
+            'password_changed_at' => null
+        ]);
+
+        return ['password' => $temporaryPassword, 'token' => $token];
+    }
+
+    /**
+     * Check if password is temporary and needs to be changed
+     */
+    public function mustChangePassword()
+    {
+        return $this->password_is_temporary;
+    }
+
+    /**
+     * Mark password as changed (no longer temporary)
+     */
+    public function markPasswordAsChanged()
+    {
+        $this->update([
+            'password_is_temporary' => false,
+            'password_changed_at' => now(),
+            'temporary_token' => null
+        ]);
+    }
+
+    /**
+     * Update last login timestamp
+     */
+    public function recordLogin()
+    {
+        $this->update(['last_login_at' => now()]);
     }
 }

@@ -18,11 +18,19 @@ class PreventTenantAccessToCentral
     {
         // Check if this is a tenant domain request
         $host = $request->getHost();
-        $centralDomains = config('tenancy.central_domains');
-        
+        $centralDomains = config('tenancy.central_domains', ['127.0.0.1', 'localhost', 'saas-gamificacao.local']);
+
+        \Log::info('PreventTenantAccessToCentral middleware', [
+            'host' => $host,
+            'central_domains' => $centralDomains,
+            'is_central' => in_array($host, $centralDomains),
+            'url' => $request->url()
+        ]);
+
         // If host is NOT in central domains, this is a tenant request
         if (!in_array($host, $centralDomains)) {
-            abort(404);
+            \Log::warning('Blocking non-central request', ['host' => $host, 'url' => $request->url()]);
+            abort(404, 'Acesso negado: Este domínio não pode acessar recursos centrais.');
         }
 
         return $next($request);

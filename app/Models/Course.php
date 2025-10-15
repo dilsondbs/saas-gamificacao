@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CourseMaterial;
+use App\Models\Traits\BelongsToTenant;
 
 class Course extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
         'title',
@@ -17,6 +18,7 @@ class Course extends Model
         'status',
         'points_per_completion',
         'instructor_id',
+        'tenant_id',
     ];
 
     protected $casts = [
@@ -48,6 +50,11 @@ class Course extends Model
     public function materials()
     {
         return $this->hasMany(CourseMaterial::class);
+    }
+
+    public function modules()
+    {
+        return $this->hasMany(Module::class)->orderBy('order');
     }
 
     public function getEnrollmentCountAttribute()

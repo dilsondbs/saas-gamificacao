@@ -1,0 +1,102 @@
+═══════════════════════════════════════════════════════════════
+    INFORMAÇÕES DO AMBIENTE - SaaS Gamificação
+═══════════════════════════════════════════════════════════════
+
+🐘 PHP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Versão: PHP 8.2.12
+Memory Limit: 512M
+
+🎨 Laravel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Framework: Laravel 11.x.x
+
+📊 Estatísticas do Sistema
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total de Rotas: 183 rotas
+
+Distribuição por Módulo:
+  • EduAI (Geração de Cursos IA): 10 rotas
+  • Instructor (Gestão de Cursos): ~30 rotas
+  • Student (Aluno): ~15 rotas
+  • Admin (Administração): ~25 rotas
+  • Central (Multi-tenancy): ~20 rotas
+  • Gamificação: ~10 rotas
+  • Autenticação: ~15 rotas
+  • API: ~10 rotas
+  • Outras: ~48 rotas
+
+🔧 Extensões PHP Requeridas
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✓ PDO (MySQL)
+  ✓ OpenSSL
+  ✓ Mbstring
+  ✓ Tokenizer
+  ✓ XML
+  ✓ Ctype
+  ✓ JSON
+  ✓ BCMath
+  ✓ Fileinfo
+  ✓ GD (para processamento de imagens)
+
+🗄️ Servidor Web
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+XAMPP (Apache + MySQL + PHP)
+Porta Apache: 80 (padrão)
+Porta MySQL: 3306
+
+🌐 Ambiente
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sistema Operacional: Windows
+Ambiente: local (desenvolvimento)
+Debug Mode: ATIVADO
+
+📦 Dependências Principais
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Backend:
+  • Laravel 11.x
+  • Inertia.js (Laravel-React)
+  • Spatie Laravel Ignition (Debug)
+  • GuzzleHTTP (HTTP Client para APIs)
+  • Smalot PdfParser (Extração de PDFs)
+
+Frontend:
+  • React 18
+  • Tailwind CSS
+  • Heroicons
+  • Vite (Build tool)
+
+AI/ML:
+  • Google Gemini API (2.5 Flash + 1.5 Pro)
+  • Python FastAPI Microservice (OpenAI GPT-4o)
+
+🚀 Performance
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Memory Limit: 512M
+  • Suficiente para operações normais ✓
+  • Geração de IA com arquivos grandes: OK ✓
+  • Processamento de PDFs: OK ✓
+  • Upload de vídeos 500MB: Requer ajuste de:
+    - upload_max_filesize
+    - post_max_size
+    - max_execution_time (atualmente 600s)
+
+Timeout Configurado:
+  • Global: 600 segundos (10 minutos)
+  • Python AI Service: 180 segundos
+  • Gemini Dual Brain: 150 segundos
+  • Gemini Flash: timeout padrão
+
+Cache:
+  • Driver: file
+  • Sem otimização (Redis recomendado para produção)
+
+Queue:
+  • Driver: sync (síncrono)
+  • ⚠️ Sem processamento em background
+  • Recomendação: Implementar Redis + Horizon
+
+═══════════════════════════════════════════════════════════════
+Compatibilidade: Laravel 11 + PHP 8.2+ + MySQL 5.7+/8.0+
+Atualizado em: $(date '+%Y-%m-%d %H:%M:%S')
+═══════════════════════════════════════════════════════════════

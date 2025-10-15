@@ -36,6 +36,12 @@ class HandleInertiaRequests extends Middleware
                     'id', 'name', 'email', 'role', 'total_points', 'email_verified_at'
                 ]) : null,
             ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'quiz_result' => fn () => $request->session()->get('quiz_result'),
+            ],
+            'csrf_token' => csrf_token(), // Sempre enviar token CSRF atualizado
             'ziggy' => function () use ($request) {
                 return array_merge((new Ziggy)->toArray(), [
                     'location' => $request->url(),

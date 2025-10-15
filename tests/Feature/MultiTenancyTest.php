@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Stancl\Tenancy\Database\Models\Domain;
+use App\Models\Domain;
 use Illuminate\Support\Facades\DB;
 
 class MultiTenancyTest extends TestCase

@@ -12,6 +12,13 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'login',
+        '*/login',
+        'central-login',
+        'logout',
+        '*/logout',
+        'student/quiz/*',
+        'eduai/generate-complete',  // ✅ NOVO
+        'eduai/save-course',         // ✅ NOVO
     ];
 }

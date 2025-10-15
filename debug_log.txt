@@ -1,0 +1,75 @@
+--- Log de 2025-10-02 00:21:52 ---
+API Key Recebida: 'AIzaSyBR9ubcvVZs4_4Qi0rVc9YD5mpO8X2lh1k'
+Pergunta Recebida: 'Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.'
+Corpo JSON Enviado: {
+    "contents":  [
+                     {
+                         "parts":  [
+                                       {
+                                           "text":  "\u0027Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.\u0027"
+                                       }
+                                   ]
+                     }
+                 ]
+}
+
+--- Log de 2025-10-02 00:21:52 ---
+API Key Recebida: 'AIzaSyBR9ubcvVZs4_4Qi0rVc9YD5mpO8X2lh1k'
+Pergunta Recebida: 'Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.'
+Corpo JSON Enviado: {
+    "contents":  [
+                     {
+                         "parts":  [
+                                       {
+                                           "text":  "\u0027Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.\u0027"
+                                       }
+                                   ]
+                     }
+                 ]
+}
+
+--- Log de 2025-10-02 00:21:53 ---
+API Key Recebida: 'AIzaSyBR9ubcvVZs4_4Qi0rVc9YD5mpO8X2lh1k'
+Pergunta Recebida: 'Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.'
+Corpo JSON Enviado: {
+    "contents":  [
+                     {
+                         "parts":  [
+                                       {
+                                           "text":  "\u0027Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.\u0027"
+                                       }
+                                   ]
+                     }
+                 ]
+}
+
+--- Log de 2025-10-02 00:21:53 ---
+API Key Recebida: 'AIzaSyBR9ubcvVZs4_4Qi0rVc9YD5mpO8X2lh1k'
+Pergunta Recebida: 'Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.'
+Corpo JSON Enviado: {
+    "contents":  [
+                     {
+                         "parts":  [
+                                       {
+                                           "text":  "\u0027Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.\u0027"
+                                       }
+                                   ]
+                     }
+                 ]
+}
+
+--- Log de 2025-10-02 00:21:53 ---
+API Key Recebida: 'AIzaSyBR9ubcvVZs4_4Qi0rVc9YD5mpO8X2lh1k'
+Pergunta Recebida: 'Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.'
+Corpo JSON Enviado: {
+    "contents":  [
+                     {
+                         "parts":  [
+                                       {
+                                           "text":  "\u0027Qual a importância da gamificação em um projeto SaaS? Responda em 30 palavras.\u0027"
+                                       }
+                                   ]
+                     }
+                 ]
+}
+

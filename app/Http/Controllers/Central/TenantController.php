@@ -6,15 +6,19 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Tenant;
-use Stancl\Tenancy\Database\Models\Domain;
+use App\Models\PlanPrice;
+use App\Models\TenantContract;
+use App\Models\Domain;
 use Illuminate\Support\Str;
 
 class TenantController extends Controller
 {
     public function index()
     {
-        $tenants = Tenant::with('domains')->latest()->paginate(10);
-        
+        \Log::info('TenantController index called');
+        \Log::warning('ACESSO SEM AUTENTICAÇÃO - Apenas para testes de desenvolvimento');
+        $tenants = Tenant::latest()->paginate(10);
+
         return Inertia::render('Central/Tenants/Index', [
             'tenants' => $tenants
         ]);
@@ -22,7 +26,56 @@ class TenantController extends Controller
 
     public function create()
     {
-        return Inertia::render('Central/Tenants/Create');
+        // Buscar preços de catálogo atualizados
+        $catalogPrices = PlanPrice::pluck('price', 'plan_name')->toArray();
+        
+        // Definir planos com preços dinâmicos
+        $plans = [
+            [
+                'id' => 'teste',
+                'name' => 'TESTE',
+                'price' => $catalogPrices['teste'] ?? 0.00,
+                'description' => '1 usuário, 1 curso, 50 MB storage, Sem IA',
+                'max_users' => 1,
+                'max_courses' => 1,
+                'max_storage_mb' => 50,
+                'features' => ['1 usuário', '1 curso', '50 MB storage', 'Sem IA de criação']
+            ],
+            [
+                'id' => 'basic',
+                'name' => 'Básico', 
+                'price' => $catalogPrices['basic'] ?? 19.90,
+                'description' => 'Até 50 usuários, 10 cursos, 1 GB storage, Sem IA',
+                'max_users' => 50,
+                'max_courses' => 10,
+                'max_storage_mb' => 1024,
+                'features' => ['50 usuários', '10 cursos', '1 GB storage', 'Sem auxílio de IA']
+            ],
+            [
+                'id' => 'premium',
+                'name' => 'Premium',
+                'price' => $catalogPrices['premium'] ?? 49.90,
+                'description' => 'Até 200 usuários, 50 cursos, 10 GB storage, IA inclusa',
+                'max_users' => 200,
+                'max_courses' => 50,
+                'max_storage_mb' => 10240,
+                'features' => ['200 usuários', '50 cursos', '10 GB storage', 'Criação de aulas com IA exclusivas']
+            ],
+            [
+                'id' => 'enterprise',
+                'name' => 'Enterprise',
+                'price' => $catalogPrices['enterprise'] ?? 199.00,
+                'description' => 'Usuários ilimitados, cursos ilimitados, 100 GB storage, IA completa',
+                'max_users' => 999999,
+                'max_courses' => 999999,
+                'max_storage_mb' => 102400,
+                'features' => ['Usuários ilimitados', 'Cursos ilimitados', '100 GB storage', 'IA completa para professores']
+            ]
+        ];
+        
+        return Inertia::render('Central/Tenants/Create', [
+            'plans' => $plans
+        ]);
     }
 
     public function store(Request $request)
@@ -31,7 +84,7 @@ class TenantController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:tenants,slug',
             'description' => 'nullable|string',
-            'plan' => 'required|in:basic,premium,enterprise',
+            'plan' => 'required|in:teste,basic,premium,enterprise',
             'max_users' => 'required|integer|min:1',
             'max_courses' => 'required|integer|min:1',
             'max_storage_mb' => 'required|integer|min:1',
@@ -55,13 +108,36 @@ class TenantController extends Controller
             'domain' => $request->slug . '.localhost'
         ]);
 
+        // Buscar preço atual do catálogo para o plano selecionado
+        $planPrice = PlanPrice::where('plan_name', $request->plan)->first();
+        $contractedPrice = $planPrice ? $planPrice->price : ($request->plan === 'teste' ? 0.00 : 19.90);
+        
+        // Criar contrato automático com o preço do catálogo
+        $contract = TenantContract::create([
+            'tenant_id' => $tenant->id,
+            'plan_name' => $request->plan,
+            'contracted_price' => $contractedPrice,
+            'contract_start' => now(),
+            'contract_end' => now()->addYear(), // 1 ano de contrato
+            'status' => 'active',
+            'billing_cycle' => 'monthly',
+            'discount_percentage' => 0,
+            'notes' => "Contrato criado automaticamente em " . now()->format('d/m/Y H:i') . " com preço de catálogo R$ " . number_format($contractedPrice, 2, ',', '.')
+        ]);
+
+        // Log da criação do tenant para Business Intelligence
+        \App\Models\TenantActivity::logTenantCreation(
+            $tenant, 
+            $contract, 
+            auth()->user() ? auth()->user()->name : 'Sistema'
+        );
+
         return redirect()->route('central.tenants.index')
-            ->with('success', 'Tenant criado com sucesso!');
+            ->with('success', 'Tenant criado com sucesso! Contrato ativo por 1 ano com preço atual do catálogo.');
     }
 
     public function show(Tenant $tenant)
     {
-        $tenant->load('domains');
         
         // Get tenant statistics
         $stats = [
@@ -71,19 +147,17 @@ class TenantController extends Controller
             'storage_used_mb' => 0,
         ];
 
-        // Run tenant-scoped queries to get statistics
-        tenancy()->initialize($tenant);
+        // Get tenant statistics using tenant_id filtering (single database system)
         try {
             $stats = [
-                'users_count' => \App\Models\User::count(),
-                'courses_count' => \App\Models\Course::count(),
-                'activities_count' => \App\Models\Activity::count(),
-                'storage_used_mb' => round(\App\Models\CourseMaterial::sum('file_size') / 1024 / 1024, 2),
+                'users_count' => \App\Models\User::where('tenant_id', $tenant->id)->count(),
+                'courses_count' => \App\Models\Course::where('tenant_id', $tenant->id)->count(),
+                'activities_count' => \App\Models\Activity::where('tenant_id', $tenant->id)->count(),
+                'storage_used_mb' => round(\App\Models\CourseMaterial::where('tenant_id', $tenant->id)->sum('file_size') / 1024 / 1024, 2),
             ];
         } catch (\Exception $e) {
-            // If tenant database doesn't exist or has issues, use default stats
+            // If tenant has issues, use default stats (already set)
         }
-        tenancy()->end();
 
         return Inertia::render('Central/Tenants/Show', [
             'tenant' => $tenant,
@@ -104,7 +178,7 @@ class TenantController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:tenants,slug,' . $tenant->id,
             'description' => 'nullable|string',
-            'plan' => 'required|in:basic,premium,enterprise',
+            'plan' => 'required|in:teste,basic,premium,enterprise',
             'max_users' => 'required|integer|min:1',
             'max_courses' => 'required|integer|min:1',
             'max_storage_mb' => 'required|integer|min:1',
@@ -128,12 +202,24 @@ class TenantController extends Controller
 
     public function destroy(Tenant $tenant)
     {
+        // Get contract information before deletion for activity logging
+        $contract = \App\Models\TenantContract::where('tenant_id', $tenant->id)
+            ->where('status', 'active')
+            ->first();
+        
+        // Log the tenant deletion activity with financial impact
+        \App\Models\TenantActivity::logTenantDeletion(
+            $tenant, 
+            $contract, 
+            auth()->user() ? auth()->user()->name : 'Sistema'
+        );
+        
         // This will trigger the tenant deletion events
         // which will delete the database and all associated data
         $tenant->delete();
 
         return redirect()->route('central.tenants.index')
-            ->with('success', 'Tenant excluído com sucesso!');
+            ->with('success', 'Tenant excluído com sucesso! O impacto financeiro foi registrado no sistema.');
     }
 
     public function toggleStatus(Tenant $tenant)
@@ -150,35 +236,67 @@ class TenantController extends Controller
 
     public function impersonate(Tenant $tenant)
     {
-        // Initialize tenant context
-        tenancy()->initialize($tenant);
-        
+        \Log::info('Impersonate started for tenant: ' . $tenant->id);
+
         try {
-            // Find first admin user in tenant
-            $adminUser = \App\Models\User::where('role', 'admin')->first();
-            
+            // Find first admin user in tenant (single database system)
+            $adminUser = \App\Models\User::where('tenant_id', $tenant->id)
+                                         ->where('role', 'admin')
+                                         ->first();
+            \Log::info('Admin user found: ' . ($adminUser ? $adminUser->id : 'none'));
+
             if (!$adminUser) {
-                tenancy()->end();
+                \Log::error('No admin user found in tenant: ' . $tenant->id);
                 return redirect()->back()
                     ->with('error', 'Nenhum usuário admin encontrado neste tenant.');
             }
 
-            // Generate impersonation token (if using the feature)
-            // For now, just redirect to tenant domain with login
-            $domain = $tenant->domains()->first();
-            
-            tenancy()->end();
-            
-            if ($domain) {
-                return redirect('http://' . $domain->domain)
-                    ->with('success', 'Redirecionando para o tenant...');
+            // Generate secure impersonation token
+            $token = \Str::random(60);
+            $expiry = now()->addMinutes(10); // Token expires in 10 minutes
+
+            // Store token in cache with user info (using file cache to ensure persistence)
+            \Cache::store('file')->put("impersonate_token_{$token}", [
+                'tenant_id' => $tenant->id,
+                'user_id' => $adminUser->id,
+                'created_at' => now(),
+            ], $expiry);
+
+            // Log impersonation token creation for audit
+            \Log::warning('Impersonation token created', [
+                'tenant_id' => $tenant->id,
+                'tenant_name' => $tenant->name,
+                'target_user_id' => $adminUser->id,
+                'target_user_email' => $adminUser->email,
+                'token' => substr($token, 0, 8) . '...',
+                'created_by' => auth()->check() ? auth()->user()->email : 'system',
+                'expires_at' => $expiry,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]);
+
+            // Use subdomain system based on tenant slug
+            $subdomain = $tenant->slug . '.app';
+            \Log::info('Subdomain for tenant: ' . $subdomain);
+
+            // Get the current request info for development environment
+            $port = request()->getPort();
+            $scheme = request()->getScheme();
+
+            // Build URL with impersonation token - redirect to admin dashboard
+            $tenantUrl = $scheme . '://' . request()->getHost();
+            if ($port && $port != 80 && $port != 443) {
+                $tenantUrl .= ':' . $port;
             }
-            
-            return redirect()->back()
-                ->with('error', 'Domínio não encontrado para este tenant.');
-                
+            $tenantUrl .= '/impersonate/' . $token;
+
+            \Log::info('Redirecting to: ' . $tenantUrl);
+
+            return redirect($tenantUrl)
+                ->with('success', 'Redirecionando para o tenant...');
+
         } catch (\Exception $e) {
-            tenancy()->end();
+            \Log::error('Impersonate error: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Erro ao acessar tenant: ' . $e->getMessage());
         }

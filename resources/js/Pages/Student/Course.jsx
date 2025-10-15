@@ -2,6 +2,26 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
+// Função para remover HTML e truncar texto
+const stripHtmlAndTruncate = (html, maxLength = 150) => {
+    if (!html) return '';
+
+    // Remove tags HTML
+    const text = html.replace(/<[^>]*>/g, '');
+
+    // Decodifica entidades HTML
+    const div = document.createElement('div');
+    div.innerHTML = text;
+    const decoded = div.textContent || div.innerText || '';
+
+    // Trunca e adiciona ...
+    if (decoded.length > maxLength) {
+        return decoded.substring(0, maxLength).trim() + '...';
+    }
+
+    return decoded;
+};
+
 export default function Course({ auth, course, activities, enrollment, progress }) {
     const user = auth.user;
     const [showCompletedOnly, setShowCompletedOnly] = useState(false);
@@ -33,19 +53,20 @@ export default function Course({ auth, course, activities, enrollment, progress 
     };
 
     const handleActivityClick = (activity) => {
-        if (!activity.can_access) {
-            return; // Não permite acesso se não pode acessar
+        // Permitir acesso a atividades concluídas OU acessíveis
+        if (!activity.can_access && !activity.is_completed) {
+            return;
         }
 
-        // Usar a nova rota de atividades que redireciona automaticamente para o tipo correto
-        router.get(route('student.activities.show', activity.id));
+        // Usar URL manual para evitar problemas com Ziggy
+        router.get(`/student/activities/${activity.id}`);
     };
 
     const ActivityCard = ({ activity, index }) => (
-        <div 
+        <div
             className={`bg-white rounded-xl shadow-lg overflow-hidden border-2 transition-all duration-300 transform hover:scale-[1.02] ${
-                activity.is_completed 
-                    ? 'border-green-200 bg-green-50' 
+                activity.is_completed
+                    ? 'border-green-200 bg-green-50 cursor-pointer hover:border-green-400 hover:shadow-lg'
                     : activity.can_access
                     ? 'border-blue-200 hover:border-blue-400 hover:shadow-xl cursor-pointer'
                     : 'border-gray-200 bg-gray-50 opacity-60'
@@ -84,7 +105,7 @@ export default function Course({ auth, course, activities, enrollment, progress 
                             <p className={`text-sm ${
                                 activity.can_access ? 'text-gray-600' : 'text-gray-400'
                             }`}>
-                                {activity.description}
+                                {stripHtmlAndTruncate(activity.description, 150)}
                             </p>
                         </div>
                     </div>
@@ -241,6 +262,62 @@ export default function Course({ auth, course, activities, enrollment, progress 
                             </div>
                         </div>
                     </div>
+
+                    {/* Desafio Final - Aparece apenas com 100% */}
+                    {progress.percentage === 100 && (
+                        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-500 rounded-xl shadow-2xl overflow-hidden animate-pulse">
+                            <div className="p-8 text-white">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center space-x-3 mb-3">
+                                            <div className="text-6xl animate-bounce">🏆</div>
+                                            <div>
+                                                <h2 className="text-3xl font-bold">Desafio Final Desbloqueado!</h2>
+                                                <p className="text-yellow-200 text-lg">
+                                                    Complete os 3 níveis e desbloqueie o título de Mestre do Curso
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Indicadores de progresso do desafio */}
+                                        <div className="flex items-center space-x-4 mt-4">
+                                            <div className="flex items-center space-x-2 bg-white/20 px-3 py-1 rounded-full">
+                                                <span>🟢</span>
+                                                <span className="text-sm">Fácil</span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 bg-white/20 px-3 py-1 rounded-full">
+                                                <span>🟡</span>
+                                                <span className="text-sm">Médio</span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 bg-white/20 px-3 py-1 rounded-full">
+                                                <span>🔴</span>
+                                                <span className="text-sm">Difícil</span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 bg-yellow-400/30 px-3 py-1 rounded-full">
+                                                <span>👑</span>
+                                                <span className="text-sm font-bold">Mestre do Curso</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => router.visit(route('student.challenge.show', course.id))}
+                                        className="hidden md:block px-8 py-4 bg-white text-purple-600 rounded-xl font-bold text-lg hover:bg-yellow-100 transition-all duration-300 transform hover:scale-110 shadow-2xl"
+                                    >
+                                        🚀 Iniciar Desafio Final
+                                    </button>
+                                </div>
+
+                                {/* Botão mobile */}
+                                <button
+                                    onClick={() => router.visit(route('student.challenge.show', course.id))}
+                                    className="md:hidden w-full mt-4 px-8 py-4 bg-white text-purple-600 rounded-xl font-bold text-lg hover:bg-yellow-100 transition-all duration-300 shadow-2xl"
+                                >
+                                    🚀 Iniciar Desafio Final
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Filter Controls */}
                     <div className="bg-white overflow-hidden shadow-lg rounded-xl">

@@ -1,0 +1,187 @@
+
+  GET|HEAD        / .................................................................................................. 
+  POST            _ignition/execute-solution ignition.executeSolution › Spatie\LaravelIgnition › ExecuteSolutionContr…
+  GET|HEAD        _ignition/health-check ....... ignition.healthCheck › Spatie\LaravelIgnition › HealthCheckController
+  POST            _ignition/update-config .... ignition.updateConfig › Spatie\LaravelIgnition › UpdateConfigController
+  GET|HEAD        account/cancel .............. tenant.cancel.form › TenantCancellationController@showCancellationForm
+  POST            account/cancel ............ tenant.cancel.process › TenantCancellationController@processCancellation
+  POST            account/restore ........................ tenant.restore › TenantCancellationController@restoreTenant
+  GET|HEAD        admin/activities ........................... admin.activities.index › Admin\ActivityController@index
+  POST            admin/activities ........................... admin.activities.store › Admin\ActivityController@store
+  GET|HEAD        admin/activities/create .................. admin.activities.create › Admin\ActivityController@create
+  GET|HEAD        admin/activities/{activity} .................. admin.activities.show › Admin\ActivityController@show
+  PUT|PATCH       admin/activities/{activity} .............. admin.activities.update › Admin\ActivityController@update
+  DELETE          admin/activities/{activity} ............ admin.activities.destroy › Admin\ActivityController@destroy
+  GET|HEAD        admin/activities/{activity}/edit ............. admin.activities.edit › Admin\ActivityController@edit
+  GET|HEAD        admin/badges ...................................... admin.badges.index › Admin\BadgeController@index
+  POST            admin/badges ...................................... admin.badges.store › Admin\BadgeController@store
+  GET|HEAD        admin/badges/create ............................. admin.badges.create › Admin\BadgeController@create
+  GET|HEAD        admin/badges/{badge} ................................ admin.badges.show › Admin\BadgeController@show
+  PUT|PATCH       admin/badges/{badge} ............................ admin.badges.update › Admin\BadgeController@update
+  DELETE          admin/badges/{badge} .......................... admin.badges.destroy › Admin\BadgeController@destroy
+  GET|HEAD        admin/badges/{badge}/edit ........................... admin.badges.edit › Admin\BadgeController@edit
+  GET|HEAD        admin/courses ................................... admin.courses.index › Admin\CourseController@index
+  POST            admin/courses ................................... admin.courses.store › Admin\CourseController@store
+  GET|HEAD        admin/courses/create .......................... admin.courses.create › Admin\CourseController@create
+  GET|HEAD        admin/courses/{course} ............................ admin.courses.show › Admin\CourseController@show
+  PUT|PATCH       admin/courses/{course} ........................ admin.courses.update › Admin\CourseController@update
+  DELETE          admin/courses/{course} ...................... admin.courses.destroy › Admin\CourseController@destroy
+  GET|HEAD        admin/courses/{course}/edit ....................... admin.courses.edit › Admin\CourseController@edit
+  GET|HEAD        admin/dashboard .................................. admin.dashboard › Admin\DashboardController@index
+  GET|HEAD        admin/users ......................................... admin.users.index › Admin\UserController@index
+  POST            admin/users ......................................... admin.users.store › Admin\UserController@store
+  GET|HEAD        admin/users/create ................................ admin.users.create › Admin\UserController@create
+  GET|HEAD        admin/users/{user} .................................... admin.users.show › Admin\UserController@show
+  PUT|PATCH       admin/users/{user} ................................ admin.users.update › Admin\UserController@update
+  DELETE          admin/users/{user} .............................. admin.users.destroy › Admin\UserController@destroy
+  GET|HEAD        admin/users/{user}/edit ............................... admin.users.edit › Admin\UserController@edit
+  GET|HEAD        api/check-slug ................... central.api.check-slug › Central\RegistrationController@checkSlug
+  GET|HEAD        api/leaderboard/badges ............................................ Api\LeaderboardController@badges
+  GET|HEAD        api/leaderboard/course/{course} ........................ Api\LeaderboardController@courseLeaderboard
+  GET|HEAD        api/leaderboard/points ............................................ Api\LeaderboardController@points
+  GET|HEAD        api/tenant-creation-result/{creationId} central.register.get-result › Central\RegistrationControlle…
+  GET|HEAD        api/user ........................................................................................... 
+  GET|HEAD        central-access ..................................................................................... 
+  GET|HEAD        central-login ................................................................... central.login.form
+  POST            central-login ...................................................................................... 
+  GET|HEAD        central/ai-usage .......................... central.ai-usage › Central\AiUsageReportController@index
+  GET|HEAD        central/billing .................................. central.billing › Central\BillingController@index
+  POST            central/billing/contracts/{contract}/update-price central.billing.update-contract-price › Central\B…
+  POST            central/billing/update-plan-price central.billing.update-plan-price › Central\BillingController@upd…
+  GET|HEAD        central/dashboard ............................ central.dashboard › Central\DashboardController@index
+  GET|HEAD        central/tenants ............................. central.tenants.index › Central\TenantController@index
+  POST            central/tenants ............................. central.tenants.store › Central\TenantController@store
+  GET|HEAD        central/tenants/create .................... central.tenants.create › Central\TenantController@create
+  GET|HEAD        central/tenants/{tenant} ...................... central.tenants.show › Central\TenantController@show
+  PUT|PATCH       central/tenants/{tenant} .................. central.tenants.update › Central\TenantController@update
+  DELETE          central/tenants/{tenant} ................ central.tenants.destroy › Central\TenantController@destroy
+  GET|HEAD        central/tenants/{tenant}/edit ................. central.tenants.edit › Central\TenantController@edit
+  POST            central/tenants/{tenant}/impersonate central.tenants.impersonate › Central\TenantController@imperso…
+  POST            central/tenants/{tenant}/toggle-status central.tenants.toggle-status › Central\TenantController@tog…
+  GET|HEAD        confirm-password ........................ password.confirm › Auth\ConfirmablePasswordController@show
+  POST            confirm-password .......................................... Auth\ConfirmablePasswordController@store
+  GET|HEAD        courses ..................................................... courses.index › CourseController@index
+  POST            courses ..................................................... courses.store › CourseController@store
+  GET|HEAD        courses/create ............................................ courses.create › CourseController@create
+  POST            courses/generate-ai .......................... courses.generate-ai › CourseController@generateFromAI
+  GET|HEAD        courses/{course} .............................................. courses.show › CourseController@show
+  PUT|PATCH       courses/{course} .......................................... courses.update › CourseController@update
+  DELETE          courses/{course} ........................................ courses.destroy › CourseController@destroy
+  POST            courses/{course}/archive ................................ courses.archive › CourseController@archive
+  POST            courses/{course}/duplicate .......................... courses.duplicate › CourseController@duplicate
+  GET|HEAD        courses/{course}/edit ......................................... courses.edit › CourseController@edit
+  POST            courses/{course}/materials/generate materials.generate › MaterialUploadController@generateActivities
+  GET|HEAD        courses/{course}/materials/upload ............ materials.upload.show › MaterialUploadController@show
+  POST            courses/{course}/materials/upload ......... materials.upload.store › MaterialUploadController@upload
+  POST            courses/{course}/publish ................................ courses.publish › CourseController@publish
+  POST            courses/{course}/upload-material ......... courses.upload-material › CourseController@uploadMaterial
+  GET|HEAD        dashboard ............................................................... central.dashboard.redirect
+  GET|HEAD        dev-login-admin .................................................................................... 
+  GET|HEAD        eduai ...................................................... eduai.dashboard › EduAIController@index
+  GET|HEAD        eduai/canvas/{canvasId?} ................................. eduai.canvas › EduAIController@showCanvas
+  POST            eduai/generate-activities ........... eduai.generate-activities › EduAIController@generateActivities
+  POST            eduai/generate-badges ....................... eduai.generate-badges › EduAIController@generateBadges
+  POST            eduai/generate-canvas ....................... eduai.generate-canvas › EduAIController@generateCanvas
+  GET|HEAD        eduai/generate-complete ................. eduai.generate-complete › EduAIController@generateComplete
+  POST            eduai/generate-complete-package eduai.generate-complete-package › EduAIController@generateCompleteP…
+  POST            eduai/generate-course ....................... eduai.generate-course › EduAIController@generateCourse
+  POST            eduai/generate-course-from-file eduai.generate-course-from-file › EduAIController@generateCourseFro…
+  POST            eduai/save-canvas ................................... eduai.save-canvas › EduAIController@saveCanvas
+  POST            eduai/save-course ................................... eduai.save-course › EduAIController@saveCourse
+  POST            email/verification-notification verification.send › Auth\EmailVerificationNotificationController@st…
+  GET|HEAD        favicon.ico ........................................................................................ 
+  GET|HEAD        forgot-password ......................... password.request › Auth\PasswordResetLinkController@create
+  POST            forgot-password ............................ password.email › Auth\PasswordResetLinkController@store
+  POST            gamification/activity/completed gamification.activity.completed › GameController@processActivityCom…
+  POST            gamification/course/completed gamification.course.completed › GameController@processCourseCompletion
+  POST            gamification/course/enrolled . gamification.course.enrolled › GameController@processCourseEnrollment
+  GET|HEAD        gamification/leaderboard .................. gamification.leaderboard › GameController@getLeaderboard
+  GET|HEAD        gamification/notifications gamification.notifications.index › NotificationController@getUserNotific…
+  DELETE          gamification/notifications ...... gamification.notifications.clear › NotificationController@clearAll
+  POST            gamification/notifications/{notificationId}/read gamification.notifications.read › NotificationCont…
+  GET|HEAD        gamification/user/{user}/rank .................. gamification.user.rank › GameController@getUserRank
+  POST            gamification/user/{user}/recalculate gamification.user.recalculate › GameController@recalculateUser…
+  GET|HEAD        gamification/user/{user}/status gamification.user.status › GameController@getUserGamificationStatus
+  GET|HEAD        help ............................................................................................... 
+  GET|HEAD        impersonate/{token} ....................... impersonate.token › ImpersonateController@loginWithToken
+  GET|HEAD        instructor/activities ....... instructor.activities.index › InstructorDashboardController@activities
+  POST            instructor/activities .... instructor.activities.store › InstructorDashboardController@storeActivity
+  GET|HEAD        instructor/activities/create instructor.activities.create › InstructorDashboardController@createAct…
+  GET|HEAD        instructor/activities/{activity} instructor.activities.show › InstructorDashboardController@showAct…
+  PUT             instructor/activities/{activity} instructor.activities.update › InstructorDashboardController@updat…
+  DELETE          instructor/activities/{activity} instructor.activities.destroy › InstructorDashboardController@dest…
+  GET|HEAD        instructor/activities/{activity}/edit instructor.activities.edit › InstructorDashboardController@ed…
+  GET|HEAD        instructor/courses ...................... instructor.courses › InstructorDashboardController@courses
+  POST            instructor/courses ............ instructor.courses.store › InstructorDashboardController@storeCourse
+  GET|HEAD        instructor/courses/ai/create instructor.courses.ai.create › Instructor\CourseController@createWithAI
+  POST            instructor/courses/ai/generate instructor.courses.ai.generate › Instructor\CourseController@generat…
+  POST            instructor/courses/ai/preview instructor.courses.ai.preview › Instructor\CourseController@previewGe…
+  GET|HEAD        instructor/courses/create ... instructor.courses.create › InstructorDashboardController@createCourse
+  GET|HEAD        instructor/courses/{course} ..... instructor.courses.show › InstructorDashboardController@showCourse
+  PUT             instructor/courses/{course} . instructor.courses.update › InstructorDashboardController@updateCourse
+  DELETE          instructor/courses/{course} instructor.courses.destroy › InstructorDashboardController@destroyCourse
+  GET|HEAD        instructor/courses/{course}/activities/create instructor.courses.activities.create › InstructorDash…
+  GET|HEAD        instructor/courses/{course}/edit instructor.courses.edit › InstructorDashboardController@editCourse
+  POST            instructor/courses/{course}/generate-from-material instructor.courses.generate › Instructor\Materia…
+  GET|HEAD        instructor/courses/{course}/materials/create instructor.courses.materials.create › Instructor\Mater…
+  GET|HEAD        instructor/dashboard ................ instructor.dashboard › InstructorDashboardController@dashboard
+  GET|HEAD        instructor/materials .............. instructor.materials.index › Instructor\MaterialController@index
+  POST            instructor/materials .............. instructor.materials.store › Instructor\MaterialController@store
+  GET|HEAD        instructor/materials/create ..... instructor.materials.create › Instructor\MaterialController@create
+  GET|HEAD        instructor/materials/{material} ..... instructor.materials.show › Instructor\MaterialController@show
+  PUT|PATCH       instructor/materials/{material} . instructor.materials.update › Instructor\MaterialController@update
+  DELETE          instructor/materials/{material} instructor.materials.destroy › Instructor\MaterialController@destroy
+  GET|HEAD        instructor/materials/{material}/download instructor.materials.download › Instructor\MaterialControl…
+  GET|HEAD        instructor/materials/{material}/edit instructor.materials.edit › Instructor\MaterialController@edit
+  GET|HEAD        instructor/materials/{material}/file instructor.materials.file › Instructor\MaterialController@serv…
+  GET|HEAD        instructor/students ................... instructor.students › InstructorDashboardController@students
+  GET|HEAD        login ........................................... login › Auth\AuthenticatedSessionController@create
+  POST            login .................................................... Auth\AuthenticatedSessionController@store
+  POST            logout ................................ central.logout › Auth\AuthenticatedSessionController@destroy
+  POST            materials/validate ...................... materials.validate › MaterialUploadController@validateFile
+  DELETE          materials/{material} ............................ materials.delete › MaterialUploadController@delete
+  GET|HEAD        materials/{material}/preview .................. materials.preview › MaterialUploadController@preview
+  PUT             password .......................................... password.update › Auth\PasswordController@update
+  GET|HEAD        password/change ............................... password.change › Auth\PasswordChangeController@show
+  PUT             password/change ...................... password.change.update › Auth\PasswordChangeController@update
+  GET|HEAD        profile .............................................. central.profile.edit › ProfileController@edit
+  PATCH           profile .......................................... central.profile.update › ProfileController@update
+  DELETE          profile ........................................ central.profile.destroy › ProfileController@destroy
+  GET|HEAD        progress/activity/{activity}/check progress.activity.check › ProgressController@checkActivityAccess
+  POST            progress/activity/{activity}/complete progress.activity.complete › ProgressController@completeActiv…
+  GET|HEAD        progress/course/{course} ......... progress.course.check › ProgressController@checkCourseProgression
+  GET|HEAD        progress/user/overall ............ progress.user.overall › ProgressController@getUserOverallProgress
+  GET|HEAD        refresh-csrf .......................................................................... refresh-csrf
+  GET|HEAD        register ........................................... register › Auth\RegisteredUserController@create
+  POST            register ....................................................... Auth\RegisteredUserController@store
+  POST            reset-password ................................... password.store › Auth\NewPasswordController@store
+  GET|HEAD        reset-password/{token} .......................... password.reset › Auth\NewPasswordController@create
+  GET|HEAD        sanctum/csrf-cookie .............. sanctum.csrf-cookie › Laravel\Sanctum › CsrfCookieController@show
+  GET|HEAD        signup .................................... central.register › Central\RegistrationController@create
+  POST            signup/complete ................ central.register.complete › Central\RegistrationController@complete
+  GET|HEAD        signup/creation-status/{creationId} central.register.check-status › Central\RegistrationController@…
+  POST            signup/start-creation central.register.start-creation › Central\RegistrationController@startCreation
+  POST            signup/step1 .................... central.register.step1 › Central\RegistrationController@storeStep1
+  GET|HEAD        signup/step2 ..................... central.register.step2 › Central\RegistrationController@showStep2
+  POST            signup/step2 .............. central.register.step2.store › Central\RegistrationController@storeStep2
+  GET|HEAD        signup/step3 ..................... central.register.step3 › Central\RegistrationController@showStep3
+  POST            signup/step3 .......... central.register.step3.process › Central\RegistrationController@processStep3
+  GET|HEAD        signup/step4 ..................... central.register.step4 › Central\RegistrationController@showStep4
+  GET|HEAD        student/activities ............... student.activities.index › Student\DashboardController@activities
+  GET|HEAD        student/activities/{activity} ... student.activities.show › Student\DashboardController@showActivity
+  GET|HEAD        student/badges ................................. student.badges › Student\DashboardController@badges
+  GET|HEAD        student/courses .............................. student.courses › Student\DashboardController@courses
+  GET|HEAD        student/courses/{course} ............. student.courses.show › Student\DashboardController@showCourse
+  GET|HEAD        student/dashboard ............................ student.dashboard › Student\DashboardController@index
+  POST            student/enroll/{course} .................. student.enroll › Student\DashboardController@enrollCourse
+  GET|HEAD        student/leaderboard .................. student.leaderboard › Student\DashboardController@leaderboard
+  GET|HEAD        student/quiz/{activity} ............... student.quiz.show › Student\DashboardController@showActivity
+  POST            student/quiz/{activity} ............... student.quiz.submit › Student\DashboardController@submitQuiz
+  GET|HEAD        tenants-dev ........................................................................................ 
+  GET|HEAD        test-login-admin ................................................................................... 
+  GET|HEAD        test-login-student ................................................................................. 
+  GET|HEAD        verify-email .......................... verification.notice › Auth\EmailVerificationPromptController
+  GET|HEAD        verify-email/{id}/{hash} .......................... verification.verify › Auth\VerifyEmailController
+
+                                                                                                  Showing [183] routes
+

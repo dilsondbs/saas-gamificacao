@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\BelongsToTenant;
 class Activity extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
         'course_id',
@@ -19,6 +20,7 @@ class Activity extends Model
         'is_required',
         'duration_minutes',
         'is_active',
+        'tenant_id',
     ];
 
     protected $casts = [

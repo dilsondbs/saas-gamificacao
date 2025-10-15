@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Register() {
+export default function Register({ isCentral }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -27,7 +27,9 @@ export default function Register() {
     const submit = (e) => {
         e.preventDefault();
 
-        post(route('register'));
+        // Use central register route if in central context, otherwise regular register
+        const registerRoute = isCentral ? '/signup' : route('register');
+        post(registerRoute);
     };
 
     return (
@@ -154,7 +156,7 @@ export default function Register() {
                     <p className="text-sm text-gray-600">
                         Já tem uma conta?{' '}
                         <Link
-                            href={route('login')}
+                            href={isCentral ? '/login' : route('login')}
                             className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
                         >
                             Faça login aqui

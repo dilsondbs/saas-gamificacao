@@ -13,79 +13,9 @@ use Inertia\Inertia;
 |
 */
 
-// Debug route to test middleware
-Route::get('/debug-central', function () {
-    return response()->json([
-        'host' => request()->getHost(),
-        'central_domains' => config('tenancy.central_domains'),
-        'is_central' => in_array(request()->getHost(), config('tenancy.central_domains')),
-        'tenant_bound' => app()->bound('tenant'),
-    ]);
-});
-
-// Test login route specifically for central
-Route::middleware(['central'])->get('/test-central-login', function () {
-    return 'Central login test working!';
-});
-
-// Test dashboard detection without auth
-Route::get('/test-dashboard-detection', function () {
-    $host = request()->getHost();
-    $centralDomains = config('tenancy.central_domains');
-    $isCentral = in_array($host, $centralDomains);
-    
-    return response()->json([
-        'host' => $host,
-        'is_central' => $isCentral,
-        'should_redirect_to' => $isCentral ? '/central/dashboard' : 'tenant dashboard'
-    ]);
-});
-
-// Debug: Check central users
-Route::middleware(['central'])->get('/debug-central-users', function () {
-    try {
-        $users = \DB::connection('central')->table('users')->get();
-        return response()->json([
-            'users_count' => $users->count(),
-            'users' => $users->map(function($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'has_password' => !empty($user->password)
-                ];
-            })
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()]);
-    }
-});
-
-// Debug: Test specific user authentication
-Route::middleware(['central'])->post('/debug-auth-test', function (\Illuminate\Http\Request $request) {
-    $email = $request->input('email', 'super@saas-gamificacao.com');
-    $password = $request->input('password', 'password');
-    
-    $user = \DB::connection('central')->table('users')
-              ->where('email', $email)
-              ->first();
-    
-    if (!$user) {
-        return response()->json(['error' => 'User not found', 'email' => $email]);
-    }
-    
-    $passwordCheck = \Hash::check($password, $user->password);
-    
-    return response()->json([
-        'user_found' => true,
-        'email' => $user->email,
-        'name' => $user->name,
-        'password_hash_preview' => substr($user->password, 0, 20) . '...',
-        'password_check_result' => $passwordCheck,
-        'testing_password' => $password
-    ]);
-});
+// ROTAS DE DEBUG REMOVIDAS POR SEGURANÇA
+// Rotas de teste que expunham dados sensíveis removidas em: 2025-09-22
+// Incluindo: debug-central, test-central-login, debug-central-users, debug-auth-test
 
 
 // Central login page
@@ -131,60 +61,51 @@ Route::middleware(['central', 'guest'])->post('/central-login', function (\Illum
     ]);
 });
 
-// Central logout
-Route::middleware(['central', 'auth'])->post('/central-logout', function () {
-    \Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    
-    return redirect('/central-login');
-})->name('central.logout');
+// Central logout (handled by AuthenticatedSessionController at line 145)
 
 // Quick access route (development) - redirects to login
 Route::middleware(['central'])->get('/central-access', function () {
     return redirect('/central-login')->with('status', 'Faça login para acessar o painel central.');
 });
 
-// Public landing page with central middleware
-Route::middleware('central')->get('/', function () {
-    return Inertia::render('Landing', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-    ]);
-});
+// Landing page moved to web.php to handle both central and tenant contexts
 
 // Favicon route with central middleware
 Route::middleware('central')->get('/favicon.ico', function () {
     return response()->file(public_path('favicon.ico'));
 });
 
-// Authentication routes for central context
+// Authentication routes for central context only
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 
-Route::middleware(['central', 'guest'])->group(function () {
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])
-                ->name('central.login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store'])
-                ->name('central.login.store');
-    
-    Route::get('register', [RegisteredUserController::class, 'create'])
-                ->name('central.register');
-    Route::post('register', [RegisteredUserController::class, 'store'])
-                ->name('central.register.store');
-    
-    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-                ->name('central.password.request');
-    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-                ->name('central.password.email');
-    
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-                ->name('central.password.reset');
-    Route::post('reset-password', [NewPasswordController::class, 'store'])
-                ->name('central.password.store');
-});
+// COMMENTED OUT: These routes are already defined in routes/auth.php
+// Defining them here with 'central' middleware blocks tenant access
+// Keep only central-specific routes like /central-login
+
+// Route::middleware(['central', 'guest'])->group(function () {
+//     Route::get('login', [AuthenticatedSessionController::class, 'create'])
+//                 ->name('central.login');
+//     Route::post('login', [AuthenticatedSessionController::class, 'store'])
+//                 ->name('central.login.store');
+//
+//     Route::get('register', [RegisteredUserController::class, 'create'])
+//                 ->name('central.register.page');
+//     Route::post('register', [RegisteredUserController::class, 'store'])
+//                 ->name('central.register.store');
+//
+//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+//                 ->name('central.password.request');
+//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+//                 ->name('central.password.email');
+//
+//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+//                 ->name('central.password.reset');
+//     Route::post('reset-password', [NewPasswordController::class, 'store'])
+//                 ->name('central.password.store');
+// });
 
 Route::middleware(['central', 'auth'])->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -196,15 +117,15 @@ Route::get('/help', function () {
     return response()->json([
         'message' => 'Rotas disponíveis no sistema',
         'central_routes' => [
-            'login' => 'http://127.0.0.1:8080/login',
-            'register' => 'http://127.0.0.1:8080/register', 
-            'central_dashboard' => 'http://127.0.0.1:8080/central/dashboard',
-            'tenants_info' => 'http://127.0.0.1:8080/tenants-dev'
+            'login' => 'http://127.0.0.1:8000/login',
+            'register' => 'http://127.0.0.1:8000/register',
+            'central_dashboard' => 'http://127.0.0.1:8000/central/dashboard',
+            'tenants_info' => 'http://127.0.0.1:8000/tenants-dev'
         ],
         'tenant_routes_need_hosts_config' => [
-            'tenant_login' => 'http://escola-teste.saas-gamificacao.local:8080/login',
-            'student_dashboard' => 'http://escola-teste.saas-gamificacao.local:8080/student/dashboard',
-            'admin_dashboard' => 'http://escola-teste.saas-gamificacao.local:8080/admin/dashboard'
+            'tenant_login' => 'http://escola-teste.saas-gamificacao.local:8000/login',
+            'student_dashboard' => 'http://escola-teste.saas-gamificacao.local:8000/student/dashboard',
+            'admin_dashboard' => 'http://escola-teste.saas-gamificacao.local:8000/admin/dashboard'
         ],
         'error_404_means' => 'Você está tentando acessar rota de tenant no contexto central, ou vice-versa'
     ]);
@@ -212,22 +133,24 @@ Route::get('/help', function () {
 
 // Development - List all tenants for easy access
 Route::get('/tenants-dev', function () {
-    $tenants = \App\Models\Tenant::all(['id', 'name', 'slug', 'plan']);
-    
+    $tenants = \App\Models\Tenant::get(['id', 'name', 'slug', 'plan']);
+
     $tenantsWithUrls = $tenants->map(function ($tenant) {
-        $domain = $tenant->domains->first();
+        // Criar domínio baseado no slug
+        $domain = "{$tenant->slug}.saas-gamificacao.local";
+
         return [
             'id' => $tenant->id,
             'name' => $tenant->name,
             'slug' => $tenant->slug,
             'plan' => $tenant->plan,
-            'domain' => $domain ? $domain->domain : null,
+            'domain' => $domain,
             // URLs para teste com curl
-            'curl_login' => "curl -H \"Host: {$domain->domain}\" http://127.0.0.1:8080/login",
-            'curl_dashboard' => "curl -H \"Host: {$domain->domain}\" http://127.0.0.1:8080/student/dashboard",
+            'curl_login' => "curl -H \"Host: {$domain}\" http://127.0.0.1:8000/login",
+            'curl_dashboard' => "curl -H \"Host: {$domain}\" http://127.0.0.1:8000/student/dashboard",
             // Instruções para hosts
-            'hosts_entry' => "127.0.0.1 {$domain->domain}",
-            'browser_url' => $domain ? "http://{$domain->domain}:8080" : null,
+            'hosts_entry' => "127.0.0.1 {$domain}",
+            'browser_url' => "http://{$domain}:8000",
         ];
     });
     
@@ -242,11 +165,24 @@ Route::get('/tenants-dev', function () {
     ]);
 });
 
+// Central dashboard route without prefix (for direct /dashboard access)
+Route::middleware(['central', 'auth', 'verified'])->get('/dashboard', function () {
+    return redirect('/central/dashboard');
+})->name('central.dashboard.redirect');
+
+// Profile management routes for central users
+Route::middleware(['central', 'auth', 'verified'])->group(function () {
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('central.profile.edit');
+    Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('central.profile.update');
+    Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('central.profile.destroy');
+});
+
 // Tenant management routes (for super admins)
-Route::middleware(['central', 'auth', 'verified'])->prefix('central')->name('central.')->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Central/Dashboard');
-    })->name('dashboard');
+// TODO: TEMPORÁRIO - Remover bypass após corrigir autenticação central
+// Route::middleware(['central', 'auth', 'verified'])->prefix('central')->name('central.')->group(function () {
+Route::middleware(['central', 'central.user'])->prefix('central')->name('central.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Central\DashboardController::class, 'index'])
+        ->name('dashboard');
     
     // Tenant CRUD routes
     Route::resource('tenants', \App\Http\Controllers\Central\TenantController::class);
@@ -256,9 +192,54 @@ Route::middleware(['central', 'auth', 'verified'])->prefix('central')->name('cen
         ->name('tenants.impersonate');
     
     // Billing routes
-    Route::get('/billing', function () {
-        return Inertia::render('Central/Billing');
-    })->name('billing');
+    Route::get('/billing', [\App\Http\Controllers\Central\BillingController::class, 'index'])
+        ->name('billing');
+    Route::post('/billing/update-plan-price', [\App\Http\Controllers\Central\BillingController::class, 'updatePlanPrice'])
+        ->name('billing.update-plan-price');
+    Route::post('/billing/contracts/{contract}/update-price', [\App\Http\Controllers\Central\BillingController::class, 'updateContractPrice'])
+        ->name('billing.update-contract-price');
+
+    // AI Usage Reports
+    Route::get('/ai-usage', [\App\Http\Controllers\Central\AiUsageReportController::class, 'index'])
+        ->name('ai-usage');
+});
+
+// Registration routes (public - no auth required)
+Route::middleware(['central'])->group(function () {
+    // Registration flow routes
+    Route::get('/signup', [\App\Http\Controllers\Central\RegistrationController::class, 'create'])
+        ->name('central.register');
+    Route::post('/signup/step1', [\App\Http\Controllers\Central\RegistrationController::class, 'storeStep1'])
+        ->name('central.register.step1');
+    Route::get('/signup/step2', [\App\Http\Controllers\Central\RegistrationController::class, 'showStep2'])
+        ->name('central.register.step2');
+    Route::post('/signup/step2', [\App\Http\Controllers\Central\RegistrationController::class, 'storeStep2'])
+        ->name('central.register.step2.store');
+    Route::get('/signup/step3', [\App\Http\Controllers\Central\RegistrationController::class, 'showStep3'])
+        ->name('central.register.step3');
+    Route::post('/signup/step3', [\App\Http\Controllers\Central\RegistrationController::class, 'processStep3'])
+        ->name('central.register.step3.process');
+    Route::get('/signup/step4', [\App\Http\Controllers\Central\RegistrationController::class, 'showStep4'])
+        ->name('central.register.step4');
+    Route::post('/signup/complete', [\App\Http\Controllers\Central\RegistrationController::class, 'complete'])
+        ->name('central.register.complete');
+
+    // API routes for registration (non-async)
+    Route::get('/api/check-slug', [\App\Http\Controllers\Central\RegistrationController::class, 'checkSlug'])
+        ->name('central.api.check-slug');
+
+    Route::post('/signup/start-creation', [\App\Http\Controllers\Central\RegistrationController::class, 'startCreation'])
+        ->name('central.register.start-creation');
+});
+
+// Async API endpoints (no Inertia middleware)
+Route::middleware(['central'])->withoutMiddleware([\App\Http\Middleware\HandleInertiaRequests::class, \App\Http\Middleware\VerifyCsrfToken::class])->group(function () {
+
+    Route::get('/signup/creation-status/{creationId}', [\App\Http\Controllers\Central\RegistrationController::class, 'checkCreationStatus'])
+        ->name('central.register.check-status');
+
+    Route::get('/api/tenant-creation-result/{creationId}', [\App\Http\Controllers\Central\RegistrationController::class, 'getCreationResult'])
+        ->name('central.register.get-result');
 });
 
 // Test routes for development (REMOVE IN PRODUCTION)

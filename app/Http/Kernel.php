@@ -34,10 +34,13 @@ class Kernel extends HttpKernel
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            // \App\Http\Middleware\EnsureFreshCsrfForNewTenants::class, // Removido na migração para banco único
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
+            // \App\Http\Middleware\SetCurrentTenant::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\CheckTemporaryPassword::class, // Verificação global de senha temporária
         ],
 
         'api' => [
@@ -67,5 +70,11 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'central' => \App\Http\Middleware\PreventTenantAccessToCentral::class,
+        'central.user' => \App\Http\Middleware\CentralUserProvider::class,
+        // 'tenant' => \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class, // Removido na migração
+        'eduai.access' => \App\Http\Middleware\EduAIAccessMiddleware::class,
+        'progression.check' => \App\Http\Middleware\CheckActivityProgression::class,
+        'tenant.context' => \App\Http\Middleware\EnsureTenantContext::class,
+        'temporary.password' => \App\Http\Middleware\CheckTemporaryPassword::class,
     ];
 }

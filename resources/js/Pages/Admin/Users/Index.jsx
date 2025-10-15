@@ -98,12 +98,15 @@ export default function Index(props) {
                         👥 Gerenciamento de Usuários
                     </h2>
                     <div className="flex items-center space-x-4">
-                        <button
-                            onClick={() => setShowDebug(!showDebug)}
-                            className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-                        >
-                            {showDebug ? 'Ocultar Debug' : 'Mostrar Debug'}
-                        </button>
+                        {/* Debug button - only show in development */}
+                        {import.meta.env.DEV && (
+                            <button
+                                onClick={() => setShowDebug(!showDebug)}
+                                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                            >
+                                {showDebug ? 'Ocultar Debug' : 'Mostrar Debug'}
+                            </button>
+                        )}
                         <Link
                             href={route('admin.users.create')}
                             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition"
@@ -266,7 +269,7 @@ export default function Index(props) {
                                         <tbody className="bg-white divide-y divide-gray-200">
                                             {usersList.map((userItem, index) => {
                                                 // Safe extraction for each user
-                                                const userId = userItem.id || index;
+                                                const userId = userItem.id !== undefined ? userItem.id : index;
                                                 const userName = userItem.name || 'N/A';
                                                 const userEmail = userItem.email || 'N/A';
                                                 const userRole = userItem.role || 'N/A';

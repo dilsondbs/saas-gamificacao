@@ -1,7 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import TenantHeader from '@/Components/TenantHeader';
+import TenantLimits from '@/Components/TenantLimits';
+import TenantBranding from '@/Components/TenantBranding';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 export default function Dashboard({ auth, generalStats, engagementMetrics, topUsers, topCourses, chartData }) {
+    const { tenant } = usePage().props;
     const StatCard = ({ title, value, subtitle, icon, gradient, change = null, trend = null }) => (
         <div className={`${gradient} overflow-hidden shadow-lg rounded-xl transform hover:scale-105 transition-all duration-300`}>
             <div className="p-6">
@@ -67,27 +71,34 @@ export default function Dashboard({ auth, generalStats, engagementMetrics, topUs
     };
 
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        🎛️ Dashboard Administrativo
-                    </h2>
-                    <div className="text-sm text-gray-600">
-                        {new Date().toLocaleDateString('pt-BR', { 
-                            weekday: 'long', 
+        <TenantBranding>
+            <AuthenticatedLayout
+                user={auth.user}
+                header={<TenantHeader title="Dashboard Administrativo" subtitle="Visão geral da sua plataforma educacional" />}
+            >
+                <Head title="Dashboard Admin" />
+
+                <div className="py-6">
+                    <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                        {/* Tenant Limits Section */}
+                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                            <div className="p-6">
+                                <TenantLimits />
+                            </div>
+                        </div>
+
+                        {/* Existing Dashboard Content */}
+                        <div className="text-sm text-gray-600">
+                            {new Date().toLocaleDateString('pt-BR', { 
+                                weekday: 'long', 
                             year: 'numeric', 
                             month: 'long', 
                             day: 'numeric' 
                         })}
                     </div>
                 </div>
-            }
-        >
-            <Head title="Admin Dashboard" />
 
-            <div className="py-8">
+                <div className="py-8">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
                     
                     {/* Header Section */}
@@ -111,42 +122,34 @@ export default function Dashboard({ auth, generalStats, engagementMetrics, topUs
 
                     {/* General Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <Link href={route('admin.users.index')}>
-                            <StatCard
-                                title="Total de Usuários"
-                                value={generalStats?.totalUsers || 0}
-                                subtitle={`${generalStats?.totalStudents || 0} estudantes, ${generalStats?.totalInstructors || 0} instrutores`}
-                                icon="👥"
-                                gradient="bg-gradient-to-br from-blue-500 to-blue-700"
-                            />
-                        </Link>
-                        <Link href={route('admin.courses.index')}>
-                            <StatCard
-                                title="Cursos"
-                                value={generalStats?.totalCourses || 0}
-                                subtitle={`${generalStats?.publishedCourses || 0} publicados`}
-                                icon="📚"
-                                gradient="bg-gradient-to-br from-green-500 to-green-700"
-                            />
-                        </Link>
-                        <Link href={route('admin.activities.index')}>
-                            <StatCard
-                                title="Atividades"
-                                value={generalStats?.totalActivities || 0}
-                                subtitle="Total de atividades"
-                                icon="✏️"
-                                gradient="bg-gradient-to-br from-purple-500 to-purple-700"
-                            />
-                        </Link>
-                        <Link href={route('admin.badges.index')}>
-                            <StatCard
-                                title="Badges"
-                                value={generalStats?.totalBadges || 0}
-                                subtitle="Total de badges"
-                                icon="🏅"
-                                gradient="bg-gradient-to-br from-yellow-500 to-orange-600"
-                            />
-                        </Link>
+                        <StatCard
+                            title="Total de Usuários"
+                            value={generalStats?.totalUsers || 0}
+                            subtitle={`${generalStats?.totalStudents || 0} estudantes, ${generalStats?.totalInstructors || 0} instrutores`}
+                            icon="👥"
+                            gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+                        />
+                        <StatCard
+                            title="Cursos"
+                            value={generalStats?.totalCourses || 0}
+                            subtitle={`${generalStats?.publishedCourses || 0} publicados`}
+                            icon="📚"
+                            gradient="bg-gradient-to-br from-green-500 to-green-700"
+                        />
+                        <StatCard
+                            title="Atividades"
+                            value={generalStats?.totalActivities || 0}
+                            subtitle="Total de atividades"
+                            icon="✏️"
+                            gradient="bg-gradient-to-br from-purple-500 to-purple-700"
+                        />
+                        <StatCard
+                            title="Badges"
+                            value={generalStats?.totalBadges || 0}
+                            subtitle="Total de badges"
+                            icon="🏅"
+                            gradient="bg-gradient-to-br from-yellow-500 to-orange-600"
+                        />
                     </div>
 
                     {/* Engagement Metrics */}
@@ -434,8 +437,10 @@ export default function Dashboard({ auth, generalStats, engagementMetrics, topUs
 
                     </div>
 
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </AuthenticatedLayout>
+            </AuthenticatedLayout>
+        </TenantBranding>
     );
 }

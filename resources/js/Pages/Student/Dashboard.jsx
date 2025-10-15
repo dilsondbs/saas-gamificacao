@@ -49,7 +49,7 @@ export default function Dashboard({ auth, stats, topStudents, recentActivities }
                 </div>
             }
         >
-            <Head title="Dashboard Estudante" />
+            <Head title="Painel do Estudante" />
 
             <div className="py-8">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">

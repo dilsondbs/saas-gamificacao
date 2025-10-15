@@ -1,8 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { Head, useForm, router } from '@inertiajs/react';
+import { useState, useEffect, useRef } from 'react';
+import QuizResults from '@/Components/QuizResults';
 
-export default function Quiz({ auth, activity, course, userActivity, hasCompleted, quiz_result }) {
+export default function Quiz({ auth, activity, course, userActivity, hasCompleted, flash }) {
     const user = auth.user;
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [showFeedback, setShowFeedback] = useState(false);
@@ -14,7 +15,9 @@ export default function Quiz({ auth, activity, course, userActivity, hasComplete
     const [particles, setParticles] = useState([]);
     const [shake, setShake] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
-    
+    const [showResultsModal, setShowResultsModal] = useState(!!flash?.quiz_result);
+    const feedbackTimeoutRef = useRef(null);
+
     const questions = activity.content?.questions || [];
     
     const { data, setData, post, processing, errors } = useForm({
@@ -86,18 +89,25 @@ export default function Quiz({ auth, activity, course, userActivity, hasComplete
         // Mostrar feedback
         setLastAnswerCorrect(isCorrect);
         setShowFeedback(true);
-        
-        // Auto-avançar após 2 segundos
-        setTimeout(() => {
+
+        // Auto-avançar após 5 segundos
+        feedbackTimeoutRef.current = setTimeout(() => {
             setShowFeedback(false);
+            feedbackTimeoutRef.current = null;
             if (questionIndex < questions.length - 1) {
                 setCurrentQuestion(questionIndex + 1);
             }
-        }, 2500);
+        }, 5000);
     };
 
     const nextQuestion = () => {
-        if (showFeedback) return;
+        // Se estiver mostrando feedback, cancela o timeout e avança
+        if (feedbackTimeoutRef.current) {
+            clearTimeout(feedbackTimeoutRef.current);
+            feedbackTimeoutRef.current = null;
+        }
+        setShowFeedback(false);
+
         if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(currentQuestion + 1);
         }
@@ -126,7 +136,8 @@ export default function Quiz({ auth, activity, course, userActivity, hasComplete
         return questions.every((_, index) => data.answers.hasOwnProperty(index));
     };
 
-    if (hasCompleted && quiz_result) {
+    // ❌ REMOVIDO: Bloco antigo de gabarito - agora usamos QuizResults modal
+    if (false && hasCompleted) {
         return (
             <AuthenticatedLayout
                 user={user}
@@ -368,7 +379,76 @@ export default function Quiz({ auth, activity, course, userActivity, hasComplete
 
             <div className={`py-8 transition-all duration-300 ${shake ? 'animate-pulse' : ''}`}>
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    
+
+                    {/* 🎯 TEASER DO DESAFIO FINAL - Aparece SOMENTE no primeiro quiz */}
+                    {(activity.order === 2 || activity.content?.quiz_number === 1) && (
+                        <div className="mb-6 animate-pulse">
+                            <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-500 rounded-xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300">
+                                <div className="p-6 text-white">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-center mb-4">
+                                        <div className="text-4xl mr-3 animate-bounce">🎯</div>
+                                        <h3 className="text-2xl font-bold tracking-wide">
+                                            DESBLOQUEIE O DESAFIO FINAL!
+                                        </h3>
+                                    </div>
+
+                                    {/* Descrição */}
+                                    <p className="text-center text-lg mb-4 font-medium">
+                                        Complete <span className="font-bold text-yellow-300">TODAS as atividades</span> e enfrente o
+                                        <span className="font-bold text-yellow-300"> DESAFIO FINAL</span>! 🏆
+                                    </p>
+
+                                    {/* Níveis de Badges */}
+                                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4">
+                                        <div className="flex items-center justify-center space-x-2 flex-wrap">
+                                            <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
+                                                <span className="text-2xl">🟢</span>
+                                                <span className="text-sm font-bold">Fácil</span>
+                                            </div>
+                                            <span className="text-2xl">→</span>
+                                            <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
+                                                <span className="text-2xl">🟡</span>
+                                                <span className="text-sm font-bold">Médio</span>
+                                            </div>
+                                            <span className="text-2xl">→</span>
+                                            <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
+                                                <span className="text-2xl">🔴</span>
+                                                <span className="text-sm font-bold">Difícil</span>
+                                            </div>
+                                            <span className="text-2xl">→</span>
+                                            <div className="flex items-center space-x-1 bg-yellow-400 text-purple-900 px-3 py-1 rounded-full">
+                                                <span className="text-2xl">👑</span>
+                                                <span className="text-xs font-bold">Mestre do Curso</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Bônus de Pontos */}
+                                    <div className="bg-yellow-400/90 text-purple-900 rounded-lg p-3 text-center">
+                                        <div className="flex items-center justify-center flex-wrap gap-2">
+                                            <span className="text-2xl">🎁</span>
+                                            <span className="font-bold text-lg">
+                                                Pontos DOBRADOS + Badge Exclusivo!
+                                            </span>
+                                            <span className="text-2xl">✨</span>
+                                        </div>
+                                        <p className="text-sm font-medium mt-2 opacity-90">
+                                            Coopere com colegas usando mensagens Skinnerianas
+                                        </p>
+                                    </div>
+
+                                    {/* Motivação */}
+                                    <div className="text-center mt-4">
+                                        <p className="text-sm font-medium opacity-90">
+                                            💪 Continue estudando para desbloquear esta experiência épica!
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Game Stats Header */}
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-xl p-4 text-center">
@@ -534,27 +614,41 @@ export default function Quiz({ auth, activity, course, userActivity, hasComplete
                                 </div>
 
                                 {currentQuestion === questions.length - 1 ? (
-                                    <button
-                                        onClick={submitQuiz}
-                                        disabled={!allQuestionsAnswered() || processing || showFeedback}
-                                        className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
-                                    >
-                                        {processing ? (
-                                            <>
-                                                <span className="animate-spin mr-2">⏳</span>
-                                                Finalizando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className="mr-2">🏆</span>
-                                                Finalizar Quiz
-                                            </>
-                                        )}
-                                    </button>
+                                    !hasCompleted ? (
+                                        <button
+                                            onClick={submitQuiz}
+                                            disabled={!allQuestionsAnswered() || processing || showFeedback}
+                                            className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
+                                        >
+                                            {processing ? (
+                                                <>
+                                                    <span className="animate-spin mr-2">⏳</span>
+                                                    Finalizando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="mr-2">🏆</span>
+                                                    Finalizar Quiz
+                                                </>
+                                            )}
+                                        </button>
+                                    ) : (
+                                        <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
+                                            <p className="text-lg text-green-700 font-bold mb-3">
+                                                ✅ Quiz já completado!
+                                            </p>
+                                            <button
+                                                onClick={() => router.visit(route('student.courses.show', course.id))}
+                                                className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-all duration-200 transform hover:scale-105"
+                                            >
+                                                📚 Voltar ao Curso
+                                            </button>
+                                        </div>
+                                    )
                                 ) : (
                                     <button
                                         onClick={nextQuestion}
-                                        disabled={!data.answers.hasOwnProperty(currentQuestion) || showFeedback}
+                                        disabled={!data.answers.hasOwnProperty(currentQuestion)}
                                         className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
                                     >
                                         Próxima →
@@ -567,8 +661,8 @@ export default function Quiz({ auth, activity, course, userActivity, hasComplete
 
                 </div>
             </div>
-            
-            <style jsx>{`
+
+            <style>{`
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
@@ -577,6 +671,18 @@ export default function Quiz({ auth, activity, course, userActivity, hasComplete
                     animation: fadeIn 0.5s ease-out;
                 }
             `}</style>
+
+            {/* Modal de Resultados */}
+            {showResultsModal && flash?.quiz_result && (
+                <QuizResults
+                    quizResult={flash.quiz_result}
+                    courseId={course.id}
+                    onClose={() => {
+                        setShowResultsModal(false);
+                        router.visit(route('student.courses.show', course.id));
+                    }}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

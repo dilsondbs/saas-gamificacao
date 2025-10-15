@@ -120,29 +120,25 @@ class TenancyServiceProvider extends ServiceProvider
 
     protected function mapRoutes()
     {
-        $this->app->booted(function () {
-            if (file_exists(base_path('routes/tenant.php'))) {
-                Route::namespace(static::$controllerNamespace)
-                    ->group(base_path('routes/tenant.php'));
-            }
-        });
+        // Tenant routes are now managed by RouteServiceProvider
+        // This method is disabled to prevent conflicts
     }
 
     protected function makeTenancyMiddlewareHighestPriority()
     {
-        $tenancyMiddleware = [
-            // Even higher priority than the initialization middleware
-            Middleware\PreventAccessFromCentralDomains::class,
+        // DISABLED: These middlewares were causing issues with central domain access
+        // They should only be applied to tenant routes explicitly
+        
+        // $tenancyMiddleware = [
+        //     Middleware\InitializeTenancyByDomain::class,
+        //     Middleware\InitializeTenancyBySubdomain::class,
+        //     Middleware\InitializeTenancyByDomainOrSubdomain::class,
+        //     Middleware\InitializeTenancyByPath::class,
+        //     Middleware\InitializeTenancyByRequestData::class,
+        // ];
 
-            Middleware\InitializeTenancyByDomain::class,
-            Middleware\InitializeTenancyBySubdomain::class,
-            Middleware\InitializeTenancyByDomainOrSubdomain::class,
-            Middleware\InitializeTenancyByPath::class,
-            Middleware\InitializeTenancyByRequestData::class,
-        ];
-
-        foreach (array_reverse($tenancyMiddleware) as $middleware) {
-            $this->app[\Illuminate\Contracts\Http\Kernel::class]->prependToMiddlewarePriority($middleware);
-        }
+        // foreach (array_reverse($tenancyMiddleware) as $middleware) {
+        //     $this->app[\Illuminate\Contracts\Http\Kernel::class]->prependToMiddlewarePriority($middleware);
+        // }
     }
 }

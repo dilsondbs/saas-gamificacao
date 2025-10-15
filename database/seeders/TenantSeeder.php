@@ -17,25 +17,37 @@ class TenantSeeder extends Seeder
 {
     /**
      * Run the database seeds for a tenant.
+     * ATENÇÃO: Este seeder agora é OPCIONAL e usado apenas para desenvolvimento/testes
+     * Em produção, apenas o usuário admin real é criado durante o registro
      *
      * @return void
      */
     public function run()
     {
-        // Create Admin User for tenant
-        $admin = User::create([
-            'name' => 'Admin Tenant',
-            'email' => 'admin@' . tenant('id') . '.local',
-            'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-            'total_points' => 0,
-        ]);
+        // AVISO: Este seeder cria dados de TESTE/DESENVOLVIMENTO
+        \Log::warning('🧪 TenantSeeder executado - criando dados de TESTE');
 
-        // Create Instructor Users
+        // Verificar se já existe usuário real (admin criado no registro)
+        $realAdminExists = User::where('role', 'admin')->exists();
+        if ($realAdminExists) {
+            $this->command->warn('⚠️  AVISO: Já existe usuário admin real. Este seeder criará dados de TESTE adicionais.');
+        }
+        // Create TESTE Admin User for tenant (apenas se não existir admin real)
+        if (!$realAdminExists) {
+            $admin = User::create([
+                'name' => '[TESTE] Admin Demo',
+                'email' => 'admin-teste@' . tenant('id') . '.local',
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'total_points' => 0,
+            ]);
+        }
+
+        // Create TESTE Instructor Users
         $instructor1 = User::create([
-            'name' => 'Professor João Silva',
-            'email' => 'joao@' . tenant('id') . '.local',
+            'name' => '[TESTE] Professor João Silva',
+            'email' => 'joao-teste@' . tenant('id') . '.local',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'role' => 'instructor',
@@ -43,19 +55,19 @@ class TenantSeeder extends Seeder
         ]);
 
         $instructor2 = User::create([
-            'name' => 'Professora Maria Santos',
-            'email' => 'maria@' . tenant('id') . '.local',
+            'name' => '[TESTE] Professora Maria Santos',
+            'email' => 'maria-teste@' . tenant('id') . '.local',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'role' => 'instructor',
             'total_points' => 0,
         ]);
 
-        // Create Student Users
+        // Create TESTE Student Users
         for ($i = 1; $i <= 10; $i++) {
             User::create([
-                'name' => "Aluno $i",
-                'email' => "aluno$i@" . tenant('id') . '.local',
+                'name' => "[TESTE] Aluno $i",
+                'email' => "aluno$i-teste@" . tenant('id') . '.local',
                 'email_verified_at' => now(),
                 'password' => Hash::make('password'),
                 'role' => 'student',

@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\BelongsToTenant;
 class Badge extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
         'name',
@@ -17,6 +18,7 @@ class Badge extends Model
         'criteria',
         'points_value',
         'is_active',
+        'tenant_id',
     ];
 
     protected $casts = [

@@ -1,3 +1,27 @@
+@import './tenant-branding.css';
+
+/* Tenant Branding Styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Estilos para tabelas no conteúdo das lições */
+.prose table {
+    @apply border-collapse border-2 border-purple-300 w-full my-6;
+}
+
+.prose thead {
+    @apply bg-purple-100;
+}
+
+.prose th {
+    @apply border-2 border-purple-300 px-4 py-3 text-left font-bold text-purple-900;
+}
+
+.prose td {
+    @apply border border-purple-200 px-4 py-3 text-gray-700;
+}
+
+.prose tbody tr:hover {
+    @apply bg-purple-50;
+}

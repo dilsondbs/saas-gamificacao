@@ -4,13 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\BelongsToTenant;
+
 class UserActivity extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
+
+    protected $table = 'user_activities';
 
     protected $fillable = [
         'user_id',
         'activity_id',
+        'tenant_id',
         'started_at',
         'completed_at',
         'score',

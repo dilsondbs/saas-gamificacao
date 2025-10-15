@@ -2,13 +2,14 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\BelongsToTenant;
 class CourseMaterial extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
         'course_id',
-        'instructor_id', 
+        'instructor_id',
         'title',
         'original_name',
         'file_path',
@@ -18,7 +19,8 @@ class CourseMaterial extends Model
         'file_metadata',
         'suggested_structure',
         'is_processed',
-        'is_active'
+        'is_active',
+        'tenant_id'
     ];
 
     protected $casts = [

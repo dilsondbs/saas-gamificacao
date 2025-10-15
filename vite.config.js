@@ -11,9 +11,19 @@ export default defineConfig({
         react(),
     ],
     server: {
-        host: true,
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        cors: true,
         hmr: {
-            host: 'localhost',
+            host: '127.0.0.1',
+            port: 5173
         },
-    },
+        allowedHosts: [
+            '.saas-gamificacao.local',
+            'localhost',
+            '127.0.0.1',
+            'all'
+        ]
+    }
 });

@@ -1,0 +1,37 @@
+INFORMAÇÕES DO BANCO DE DADOS - BACKUP PASSO 1
+=========================================
+
+BANCO CENTRAL:
+- Nome: saas_gamificacao_central
+- Host: 127.0.0.1
+- Porta: 3306
+- Usuário: root
+- Senha: (vazia)
+- Conexão: central
+
+BANCOS TENANT:
+- Padrão de nomes: tenant + tenant_id (ex: tenant1, tenant2, etc.)
+- Host: 127.0.0.1
+- Porta: 3306
+- Usuário: root
+- Senha: (vazia)
+- Prefixo configurado: 'tenant' (definido em config/tenancy.php)
+
+MIGRATIONS:
+- Total de arquivos em database/migrations/: 26
+
+CONFIGURAÇÕES ESPECIAIS:
+- Sistema multi-tenant usando Stancl/Tenancy
+- Domínios: .saas-gamificacao.local
+- Tenant model: \App\Models\Tenant::class
+- Central connection: env('DB_CONNECTION', 'central')
+- Template tenant connection: null
+
+TABELAS CENTRAIS IDENTIFICADAS:
+- tenants (principal)
+- tenant_contracts (contratos/assinaturas)
+- tenant_activities (log de atividades)
+- plan_prices
+- user_invitations
+
+NOTA: Cada tenant possui seu próprio banco de dados separado com estrutura completa.

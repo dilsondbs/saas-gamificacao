@@ -8,8 +8,29 @@ export default function Courses({ auth, courses, enrolledCourseIds }) {
 
     const handleEnroll = (courseId) => {
         setEnrolling(courseId);
-        router.post(route('student.enroll', courseId), {}, {
-            onFinish: () => setEnrolling(null)
+
+        // Try Ziggy route first, fallback to direct URL
+        let enrollUrl;
+        try {
+            enrollUrl = route('student.enroll', courseId);
+        } catch (error) {
+            console.warn('Ziggy route not found, using direct URL:', error);
+            enrollUrl = `/student/enroll/${courseId}`;
+        }
+
+        router.post(enrollUrl, {
+            _token: document.querySelector('meta[name="csrf-token"]')?.content
+        }, {
+            preserveState: false,
+            preserveScroll: true,
+            onFinish: () => setEnrolling(null),
+            onError: (errors) => {
+                console.error('Enrollment error:', errors);
+                alert('Erro na matrícula. Por favor, recarregue a página e tente novamente.');
+            },
+            onSuccess: () => {
+                console.log('Enrollment successful!');
+            }
         });
     };
 
@@ -77,7 +98,10 @@ export default function Courses({ auth, courses, enrolledCourseIds }) {
                     {isEnrolled(course.id) ? (
                         <div className="flex w-full space-x-2">
                             <button
-                                onClick={() => router.get(route('student.courses.show', course.id))}
+                                onClick={() => {
+                                    console.log('Navigating to course ID:', course.id);
+                                    router.get(`/student/courses/${course.id}`);
+                                }}
                                 className="flex-1 bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-medium hover:bg-blue-200 transition-colors duration-200"
                             >
                                 📖 Continuar Estudos
@@ -85,8 +109,14 @@ export default function Courses({ auth, courses, enrolledCourseIds }) {
                             <button
                                 onClick={() => {
                                     const firstActivity = course.activities?.[0];
-                                    if (firstActivity) {
-                                        router.get(route('student.quiz.show', firstActivity.id));
+                                    console.log('Course activities:', course.activities);
+                                    console.log('First activity:', firstActivity);
+                                    if (firstActivity && firstActivity.id) {
+                                        console.log('Navigating to activity ID:', firstActivity.id);
+                                        router.get(`/student/activities/${firstActivity.id}`);
+                                    } else {
+                                        console.error('No valid activity found');
+                                        alert('Nenhuma atividade disponível neste curso.');
                                     }
                                 }}
                                 disabled={!course.activities || course.activities.length === 0}

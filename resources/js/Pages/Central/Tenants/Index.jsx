@@ -1,7 +1,18 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function TenantsIndex({ auth, tenants }) {
+    const [confirmDelete, setConfirmDelete] = useState(null);
+
+    const handleDelete = (tenant) => {
+        if (window.confirm(`Tem certeza que deseja excluir o tenant "${tenant.name}"? Esta ação não pode ser desfeita e todos os dados do tenant serão permanentemente removidos.`)) {
+            router.delete(`/central/tenants/${tenant.id}`, {
+                preserveScroll: true,
+            });
+        }
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -101,7 +112,10 @@ export default function TenantsIndex({ auth, tenants }) {
                                                         >
                                                             Editar
                                                         </Link>
-                                                        <button className="text-red-600 hover:text-red-900">
+                                                        <button 
+                                                            onClick={() => handleDelete(tenant)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                        >
                                                             Excluir
                                                         </button>
                                                     </td>

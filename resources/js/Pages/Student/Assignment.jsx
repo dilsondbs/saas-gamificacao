@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Assignment({ auth, activity, course, userActivity, hasCompleted }) {
@@ -7,8 +7,7 @@ export default function Assignment({ auth, activity, course, userActivity, hasCo
     const [assignmentStarted, setAssignmentStarted] = useState(false);
     const [assignmentText, setAssignmentText] = useState('');
     const [startTime] = useState(new Date());
-    
-    const { post, processing } = useForm();
+    const [submitting, setSubmitting] = useState(false);
 
     const startAssignment = () => {
         setAssignmentStarted(true);
@@ -20,11 +19,25 @@ export default function Assignment({ auth, activity, course, userActivity, hasCo
             return;
         }
 
-        post(route('student.quiz.submit', activity.id), {
+        setSubmitting(true);
+
+        router.post(route('student.quiz.submit', activity.id), {
             answers: {},
             assignment_text: assignmentText,
             assignment_completed: true,
             time_spent: Math.floor((new Date() - startTime) / 1000)
+        }, {
+            preserveState: false,
+            preserveScroll: false,
+            onSuccess: () => {
+                console.log('✅ Assignment submitted successfully');
+                setSubmitting(false);
+            },
+            onError: (errors) => {
+                console.error('❌ Assignment submission error:', errors);
+                setSubmitting(false);
+                alert('Erro ao enviar o exercício. Tente novamente.');
+            }
         });
     };
 
@@ -226,10 +239,10 @@ export default function Assignment({ auth, activity, course, userActivity, hasCo
                                     <div className="mt-6 text-center">
                                         <button
                                             onClick={submitAssignment}
-                                            disabled={processing || assignmentText.trim().length < 50}
+                                            disabled={submitting || assignmentText.trim().length < 50}
                                             className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
                                         >
-                                            {processing ? (
+                                            {submitting ? (
                                                 <>
                                                     <span className="animate-spin mr-2">⏳</span>
                                                     Enviando...
@@ -263,15 +276,6 @@ export default function Assignment({ auth, activity, course, userActivity, hasCo
 
                 </div>
             </div>
-            
-            <style jsx>{`
-                .prose h3 { color: #374151; margin-top: 1.5rem; margin-bottom: 0.75rem; }
-                .prose h4 { color: #4b5563; margin-top: 1rem; margin-bottom: 0.5rem; }
-                .prose p { margin-bottom: 1rem; }
-                .prose ul { margin: 1rem 0; padding-left: 1.5rem; }
-                .prose ol { margin: 1rem 0; padding-left: 1.5rem; }
-                .prose li { margin-bottom: 0.5rem; }
-            `}</style>
         </AuthenticatedLayout>
     );
 }

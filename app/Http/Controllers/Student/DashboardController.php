@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\Activity;
 use App\Models\UserActivity;
 use App\Models\Point;
+use App\Services\TenantContextService;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
@@ -42,13 +43,19 @@ class DashboardController extends Controller
     public function courses()
     {
         $user = auth()->user();
-        
-        // Buscar cursos disponíveis
+
+        // Verificar se usuário está logado
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
+        }
+
+        // CORREÇÃO CRÍTICA: Buscar cursos disponíveis APENAS do tenant atual
+        // O global scope do BelongsToTenant já filtra automaticamente por tenant_id
         $availableCourses = Course::where('status', 'published')
             ->with(['instructor', 'activities'])
             ->withCount('enrollments')
             ->get();
-            
+
         // Buscar cursos do usuário
         $enrolledCourseIds = CourseEnrollment::where('user_id', $user->id)
             ->pluck('course_id')
@@ -64,16 +71,49 @@ class DashboardController extends Controller
     public function showCourse(Course $course)
     {
         $user = auth()->user();
-        
+
         // Verificar se o usuário está matriculado
         $enrollment = CourseEnrollment::where('user_id', $user->id)
             ->where('course_id', $course->id)
             ->first();
-            
+
         if (!$enrollment) {
             return redirect()->route('student.courses')->with('error', 'Você precisa estar matriculado neste curso.');
         }
-        
+
+        // Rest of the method...
+        return $this->showCourseInternal($course, $user, $enrollment);
+    }
+
+    public function showCourseById($id)
+    {
+        $user = auth()->user();
+
+        // Verificar se usuário está logado
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Você precisa estar logado.');
+        }
+
+        // Buscar course por ID
+        $course = Course::find($id);
+        if (!$course) {
+            return redirect()->route('student.courses')->with('error', 'Curso não encontrado.');
+        }
+
+        // Verificar se o usuário está matriculado
+        $enrollment = CourseEnrollment::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        if (!$enrollment) {
+            return redirect()->route('student.courses')->with('error', 'Você precisa estar matriculado neste curso.');
+        }
+
+        return $this->showCourseInternal($course, $user, $enrollment);
+    }
+
+    private function showCourseInternal($course, $user, $enrollment)
+    {
         // Buscar atividades do curso ordenadas por ordem
         $activities = $course->activities()
             ->orderBy('order')
@@ -121,26 +161,40 @@ class DashboardController extends Controller
     
     private function canAccessActivity($activity, $user)
     {
+        // ✅ PERMITIR REVISÃO: Se a atividade já foi completada, sempre permitir acesso
+        $currentUserActivity = UserActivity::where('user_id', $user->id)
+            ->where('activity_id', $activity->id)
+            ->whereNotNull('completed_at')
+            ->first();
+
+        if ($currentUserActivity) {
+            \Log::info('✅ Controller: Atividade já completada - ACESSO LIBERADO para revisão', [
+                'activity_id' => $activity->id,
+                'user_id' => $user->id
+            ]);
+            return true;
+        }
+
         // Se for a primeira atividade, sempre pode acessar
         if ($activity->order <= 1) {
             return true;
         }
-        
+
         // Buscar a atividade anterior
         $previousActivity = Activity::where('course_id', $activity->course_id)
             ->where('order', '<', $activity->order)
             ->orderBy('order', 'desc')
             ->first();
-        
+
         if (!$previousActivity) {
             return true; // Se não há atividade anterior, pode acessar
         }
-        
+
         // Verificar se completou a atividade anterior
         $previousUserActivity = UserActivity::where('user_id', $user->id)
             ->where('activity_id', $previousActivity->id)
             ->first();
-        
+
         return $previousUserActivity && $previousUserActivity->isCompleted();
     }
     
@@ -248,6 +302,8 @@ class DashboardController extends Controller
     
     private function getTopStudents()
     {
+        // CORREÇÃO CRÍTICA: Top students APENAS do tenant atual
+        // O global scope do BelongsToTenant já filtra automaticamente por tenant_id
         return User::where('role', 'student')
             ->orderBy('total_points', 'desc')
             ->limit(5)
@@ -330,32 +386,51 @@ class DashboardController extends Controller
     public function enrollCourse(Course $course)
     {
         $user = auth()->user();
-        
+
         // Check if already enrolled
         if (CourseEnrollment::where('user_id', $user->id)->where('course_id', $course->id)->exists()) {
             return back()->with('error', 'Você já está matriculado neste curso.');
         }
-        
-        // Create enrollment
+
+        // Create enrollment with tenant_id
         CourseEnrollment::create([
             'user_id' => $user->id,
             'course_id' => $course->id,
+            'tenant_id' => $user->tenant_id, // ✅ IMPORTANTE: associar com tenant
             'enrolled_at' => now(),
             'progress_percentage' => 0,
         ]);
-        
+
         return redirect()->route('student.courses')->with('success', 'Matrícula realizada com sucesso!');
     }
     
     public function showActivity(Activity $activity)
     {
+        return $this->showActivityInternal($activity);
+    }
+
+    public function showActivityById($id)
+    {
+        $activity = Activity::find($id);
+        if (!$activity) {
+            return redirect()->route('student.courses')->with('error', 'Atividade não encontrada.');
+        }
+        return $this->showActivityInternal($activity);
+    }
+
+    private function showActivityInternal($activity)
+    {
         $user = auth()->user();
-        
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Você precisa estar logado.');
+        }
+
         // Verificar se o usuário está matriculado no curso
         $enrollment = CourseEnrollment::where('user_id', $user->id)
             ->where('course_id', $activity->course_id)
             ->first();
-            
+
         if (!$enrollment) {
             return redirect()->route('student.courses')->with('error', 'Você precisa estar matriculado no curso para acessar esta atividade.');
         }
@@ -371,6 +446,7 @@ class DashboardController extends Controller
             'user_id' => $user->id,
             'activity_id' => $activity->id,
         ], [
+            'tenant_id' => $user->tenant_id, // ✅ IMPORTANTE: associar com tenant
             'started_at' => now(),
             'attempts' => 0,
         ]);
@@ -391,9 +467,51 @@ class DashboardController extends Controller
     
     private function showQuiz(Activity $activity, $user, $userActivity)
     {
+        // ✅ CORREÇÃO: Buscar questions do quiz
+        // Decodificar content se for string JSON
+        $content = is_string($activity->content) ? json_decode($activity->content, true) : $activity->content;
+        $content = $content ?? []; // Garantir que não seja null
+
+        $questions = [];
+
+        if (isset($content['quiz_id'])) {
+            // Arquitetura 2: Quiz na tabela separada
+            $quiz = \App\Models\Quiz::with('questions')->find($content['quiz_id']);
+            if ($quiz && $quiz->questions->count() > 0) {
+                // Converter questions do banco para o formato esperado pelo frontend
+                $questions = $quiz->questions->map(function($q) {
+                    return [
+                        'question' => $q->question,
+                        'options' => $q->options ?? [],
+                        'correct' => $this->convertAnswerToIndex($q->correct_answer),
+                        'explanation' => $q->explanation ?? null
+                    ];
+                })->toArray();
+            }
+        } elseif (isset($content['questions'])) {
+            // Arquitetura 1: Questions no JSON content
+            // Normalizar formato: converter correct_answer para correct (índice numérico)
+            $questions = array_map(function($q) {
+                if (isset($q['correct_answer']) && !isset($q['correct'])) {
+                    $q['correct'] = $this->convertAnswerToIndex($q['correct_answer']);
+                }
+                return $q;
+            }, $content['questions']);
+        }
+
+        // Preparar dados da activity para o frontend
+        $activityData = $activity->toArray();
+
+        // Garantir que content seja array antes de atribuir questions
+        if (is_string($activityData['content'])) {
+            $activityData['content'] = json_decode($activityData['content'], true) ?? [];
+        }
+
+        $activityData['content']['questions'] = $questions;
+
         return Inertia::render('Student/Quiz', [
             'auth' => ['user' => $user],
-            'activity' => $activity,
+            'activity' => $activityData,
             'course' => $activity->course,
             'userActivity' => $userActivity,
             'hasCompleted' => $userActivity->isCompleted()
@@ -402,9 +520,24 @@ class DashboardController extends Controller
     
     private function showReading(Activity $activity, $user, $userActivity)
     {
+        // Preparar dados da activity para o frontend
+        $activityData = $activity->toArray();
+
+        // Decodificar content se for string JSON
+        if (is_string($activityData['content'])) {
+            $decoded = json_decode($activityData['content'], true);
+
+            // Se o content interno também é string, decodificar HTML entities e stripslashes
+            if (isset($decoded['content']) && is_string($decoded['content'])) {
+                $decoded['content'] = html_entity_decode(stripslashes($decoded['content']), ENT_QUOTES, 'UTF-8');
+            }
+
+            $activityData['content'] = $decoded ?? [];
+        }
+
         return Inertia::render('Student/Reading', [
             'auth' => ['user' => $user],
-            'activity' => $activity,
+            'activity' => $activityData,  // ✅ Passa array preparado
             'course' => $activity->course,
             'userActivity' => $userActivity,
             'hasCompleted' => $userActivity->isCompleted()
@@ -424,21 +557,60 @@ class DashboardController extends Controller
     
     public function submitQuiz(Request $request, Activity $activity)
     {
+        return $this->submitQuizInternal($request, $activity);
+    }
+
+    public function submitQuizById(Request $request, $id)
+    {
+        $activity = Activity::find($id);
+        if (!$activity) {
+            return redirect()->back()->with('error', 'Atividade não encontrada.');
+        }
+        return $this->submitQuizInternal($request, $activity);
+    }
+
+    private function submitQuizInternal(Request $request, Activity $activity)
+    {
         $user = auth()->user();
-        
+
+        \Log::info('🎯 submitQuizInternal INICIADO', [
+            'activity_id' => $activity->id,
+            'activity_type' => $activity->type,
+            'user_id' => $user?->id
+        ]);
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Você precisa estar logado.');
+        }
+
         // Buscar UserActivity
         $userActivity = UserActivity::where('user_id', $user->id)
             ->where('activity_id', $activity->id)
             ->first();
-            
+
+        // Forçar refresh do banco para evitar cache
+        if ($userActivity) {
+            $userActivity = $userActivity->fresh();
+        }
+
         if (!$userActivity) {
             return redirect()->back()->with('error', 'Atividade não encontrada.');
         }
-        
+
+        \Log::info('📋 UserActivity encontrada', [
+            'user_activity_id' => $userActivity->id,
+            'is_completed' => $userActivity->isCompleted()
+        ]);
+
         // Se já completou, não permitir nova submissão
         if ($userActivity->isCompleted()) {
             return redirect()->back()->with('error', 'Você já completou esta atividade.');
         }
+
+        \Log::info('🔀 Entrando no switch', [
+            'activity_type' => $activity->type,
+            'vai_processar' => 'processQuizSubmission'
+        ]);
 
         // Processar baseado no tipo de atividade
         switch ($activity->type) {
@@ -456,20 +628,55 @@ class DashboardController extends Controller
     
     private function processQuizSubmission($request, $activity, $userActivity, $user)
     {
+        \Log::info('🎯 processQuizSubmission INICIADO', [
+            'activity_id' => $activity->id,
+            'user_id' => $user->id,
+            'request_data' => $request->all()
+        ]);
+
         $request->validate([
             'answers' => 'required|array',
         ]);
-        
+
         // Calcular pontuação
-        $questions = $activity->content['questions'] ?? [];
+        // Decodificar content se for string JSON
+        $content = is_string($activity->content) ? json_decode($activity->content, true) : $activity->content;
+        $questions = $content['questions'] ?? [];
+
+        // Normalizar questões: converter correct_answer para correct
+        $questions = array_map(function($q) {
+            if (isset($q['correct_answer']) && !isset($q['correct'])) {
+                $q['correct'] = $this->convertAnswerToIndex($q['correct_answer']);
+            }
+            return $q;
+        }, $questions);
+
         $answers = $request->answers;
         $score = 0;
         $totalQuestions = count($questions);
-        
+
+        \Log::info('🔍 Debug Quiz Submission', [
+            'total_questions' => count($questions),
+            'answers_received' => $answers,
+            'first_question_structure' => $questions[0] ?? null
+        ]);
+
+        $detailedResults = [];
         foreach ($questions as $index => $question) {
-            if (isset($answers[$index]) && $answers[$index] == $question['correct']) {
+            $userAnswer = $answers[$index] ?? null;
+            $isCorrect = isset($answers[$index]) && $answers[$index] == $question['correct'];
+
+            if ($isCorrect) {
                 $score++;
             }
+
+            $detailedResults[] = [
+                'question' => $question['question'],
+                'user_answer' => $userAnswer,
+                'correct_answer' => $question['correct'],
+                'is_correct' => $isCorrect,
+                'explanation' => $question['explanation'] ?? null
+            ];
         }
         
         // Calcular pontos (baseado na porcentagem de acertos)
@@ -479,7 +686,7 @@ class DashboardController extends Controller
         // Atualizar UserActivity
         $userActivity->update([
             'completed_at' => now(),
-            'score' => $score,
+            'score' => $percentage,  // ✅ USAR PERCENTUAL ao invés de número absoluto
             'attempts' => $userActivity->attempts + 1,
             'metadata' => [
                 'answers' => $answers,
@@ -492,7 +699,7 @@ class DashboardController extends Controller
         // Dar pontos ao usuário se passou
         if ($pointsEarned > 0) {
             $user->increment('total_points', $pointsEarned);
-            
+
             try {
                 Point::create([
                     'user_id' => $user->id,
@@ -504,17 +711,30 @@ class DashboardController extends Controller
             } catch (\Exception $e) {
                 // Falha silenciosa se modelo Point não existir
             }
+
+            // ✨ VERIFICAR E CONCEDER BADGES AUTOMATICAMENTE
+            try {
+                $badgeService = new \App\Services\BadgeService();
+                $badgesAwarded = $badgeService->checkAndAwardBadges($user);
+
+                if ($badgesAwarded > 0) {
+                    session()->flash('badges_awarded', $badgesAwarded);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Erro ao verificar badges: ' . $e->getMessage());
+            }
         }
         
-        return redirect()->route('student.activities.show', $activity)->with([
-            'success' => $pointsEarned > 0 
-                ? "Parabéns! Você ganhou {$pointsEarned} pontos!" 
+        return redirect()->route('student.courses.show', $activity->course_id)->with([
+            'success' => $pointsEarned > 0
+                ? "Parabéns! Você ganhou {$pointsEarned} pontos!"
                 : "Quiz completado! Você precisa de pelo menos 70% para ganhar pontos.",
             'quiz_result' => [
                 'score' => $score,
                 'total' => $totalQuestions,
                 'percentage' => $percentage,
-                'points_earned' => $pointsEarned
+                'points_earned' => $pointsEarned,
+                'detailed_results' => $detailedResults
             ]
         ]);
     }
@@ -537,7 +757,7 @@ class DashboardController extends Controller
         
         // Dar pontos ao usuário
         $user->increment('total_points', $pointsEarned);
-        
+
         try {
             Point::create([
                 'user_id' => $user->id,
@@ -548,6 +768,18 @@ class DashboardController extends Controller
             ]);
         } catch (\Exception $e) {
             // Falha silenciosa se modelo Point não existir
+        }
+
+        // ✨ VERIFICAR E CONCEDER BADGES AUTOMATICAMENTE
+        try {
+            $badgeService = new \App\Services\BadgeService();
+            $badgesAwarded = $badgeService->checkAndAwardBadges($user);
+
+            if ($badgesAwarded > 0) {
+                session()->flash('badges_awarded', $badgesAwarded);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro ao verificar badges: ' . $e->getMessage());
         }
         
         return redirect()->route('student.activities.show', $activity)->with([
@@ -688,5 +920,20 @@ class DashboardController extends Controller
             'availableBadges' => $availableBadges,
             'progressBadges' => $progressBadges
         ]);
+    }
+
+    /**
+     * Converte resposta (letra ou número) para índice numérico
+     */
+    private function convertAnswerToIndex($answer)
+    {
+        // Se já for número, retorna como int
+        if (is_numeric($answer)) {
+            return (int)$answer;
+        }
+
+        // Se for letra (A, B, C, D), converte para índice (0, 1, 2, 3)
+        $letter = strtoupper(trim($answer));
+        return ord($letter) - ord('A'); // A=0, B=1, C=2, D=3
     }
 }

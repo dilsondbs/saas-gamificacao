@@ -1,0 +1,68 @@
+/* Tenant Branding Styles */
+.tenant-branded {
+  /* CSS Variables will be injected dynamically */
+  --tenant-primary: #3B82F6; /* fallback */
+}
+
+.tenant-branded .btn-primary,
+.tenant-branded .bg-primary {
+  background-color: var(--tenant-primary) !important;
+}
+
+.tenant-branded .text-primary {
+  color: var(--tenant-primary) !important;
+}
+
+.tenant-branded .border-primary {
+  border-color: var(--tenant-primary) !important;
+}
+
+.tenant-branded .hover\:bg-primary:hover {
+  background-color: var(--tenant-primary-600, var(--tenant-primary)) !important;
+}
+
+.tenant-branded .focus\:ring-primary:focus {
+  --tw-ring-color: var(--tenant-primary) !important;
+  box-shadow: 0 0 0 3px rgb(var(--tenant-primary) / 0.1) !important;
+}
+
+/* Progress bars with tenant colors */
+.tenant-branded .progress-bar-primary {
+  background-color: var(--tenant-primary) !important;
+}
+
+/* Navigation links with tenant colors */
+.tenant-branded .nav-link.active {
+  color: var(--tenant-primary) !important;
+  border-bottom-color: var(--tenant-primary) !important;
+}
+
+/* Custom tenant badges */
+.tenant-branded .badge-tenant {
+  background-color: var(--tenant-primary-100, var(--tenant-primary)) !important;
+  color: var(--tenant-primary-700, var(--tenant-primary)) !important;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Primary color variants */
+.tenant-branded .bg-primary-600 {
+  background-color: var(--tenant-primary-600, color-mix(in srgb, var(--tenant-primary) 90%, black)) !important;
+}
+
+.tenant-branded .hover\:bg-primary-600:hover {
+  background-color: var(--tenant-primary-600, color-mix(in srgb, var(--tenant-primary) 90%, black)) !important;
+}

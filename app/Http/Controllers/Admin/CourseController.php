@@ -99,6 +99,9 @@ class CourseController extends Controller
         // Debug log to see what we received
         \Log::info('Course creation request:', $request->all());
 
+        // Add tenant_id
+        $validated['tenant_id'] = auth()->user()->tenant_id;
+
         Course::create($validated);
 
         return redirect()->route('admin.courses.index')
@@ -204,5 +207,65 @@ class CourseController extends Controller
             ->count();
 
         return round(($completedEnrollments / $totalEnrollments) * 100, 1);
+    }
+
+    /**
+     * Salvar questões do Desafio Final vindas da API Python
+     *
+     * @param Course $course
+     * @param array|null $challengeQuestions Array com keys: easy, medium, hard
+     * @return void
+     */
+    private function saveFinalChallengeQuestions(Course $course, ?array $challengeQuestions): void
+    {
+        if (!$challengeQuestions) {
+            \Log::warning('Final Challenge questions não fornecidas', [
+                'course_id' => $course->id
+            ]);
+            return;
+        }
+
+        $levels = [
+            'easy' => [
+                'questions' => $challengeQuestions['easy'] ?? [],
+                'min_score' => 60,
+                'title' => 'Desafio Final - Nível Fácil'
+            ],
+            'medium' => [
+                'questions' => $challengeQuestions['medium'] ?? [],
+                'min_score' => 70,
+                'title' => 'Desafio Final - Nível Médio'
+            ],
+            'hard' => [
+                'questions' => $challengeQuestions['hard'] ?? [],
+                'min_score' => 80,
+                'title' => 'Desafio Final - Nível Difícil'
+            ]
+        ];
+
+        foreach ($levels as $level => $data) {
+            if (count($data['questions']) === 10) {
+                \App\Models\FinalChallenge::create([
+                    'course_id' => $course->id,
+                    'difficulty_level' => $level,
+                    'title' => $data['title'],
+                    'time_limit_minutes' => 20,
+                    'min_score_percentage' => $data['min_score'],
+                    'content' => json_encode(['questions' => $data['questions']]),
+                    'tenant_id' => $course->tenant_id
+                ]);
+
+                \Log::info("✅ Final Challenge {$level} criado automaticamente", [
+                    'course_id' => $course->id,
+                    'questions_count' => count($data['questions'])
+                ]);
+            } else {
+                \Log::warning("⚠️ Final Challenge {$level} não criado - questões insuficientes", [
+                    'course_id' => $course->id,
+                    'expected' => 10,
+                    'received' => count($data['questions'])
+                ]);
+            }
+        }
     }
 }

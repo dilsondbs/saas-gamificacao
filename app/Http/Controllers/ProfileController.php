@@ -18,9 +18,13 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        // Check if we're in central context
+        $isCentral = in_array($request->getHost(), config('tenancy.central_domains', []));
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'isCentral' => $isCentral,
         ]);
     }
 

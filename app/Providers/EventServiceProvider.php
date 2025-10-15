@@ -18,6 +18,23 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+
+        // Gamification Events
+        \App\Events\ActivityCompleted::class => [
+            \App\Listeners\ProcessActivityCompletionGamification::class,
+        ],
+
+        \App\Events\CourseCompleted::class => [
+            \App\Listeners\ProcessCourseCompletionGamification::class,
+        ],
+
+        \App\Events\BadgeEarned::class => [
+            \App\Listeners\SendBadgeNotification::class,
+        ],
+
+        \App\Events\LevelUp::class => [
+            \App\Listeners\SendLevelUpNotification::class,
+        ],
     ];
 
     /**

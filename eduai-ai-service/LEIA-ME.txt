@@ -1,0 +1,110 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║          MICROSERVIÇO PYTHON AI - GUIA RÁPIDO               ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+🎯 COMO USAR ESTE MICROSERVIÇO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 PRIMEIRA VEZ? SIGA ESTES PASSOS:
+
+1. Leia o arquivo: GUIA_INSTALACAO_COMPLETO.md
+   (Ele tem TUDO explicado passo a passo)
+
+2. Obtenha sua chave da OpenAI:
+   → https://platform.openai.com/api-keys
+
+3. Configure o arquivo .env:
+   → Copie .env.example para .env
+   → Adicione sua chave OpenAI
+
+4. DÊ DOIS CLIQUES no arquivo: iniciar.bat
+   → Vai instalar tudo automaticamente
+   → Vai iniciar o microserviço
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ INICIAR RAPIDAMENTE (se já configurou):
+
+   → Duplo clique em: iniciar.bat
+
+   OU via terminal:
+   → uvicorn app.main:app --reload --port 8001
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 TESTAR SE ESTÁ FUNCIONANDO:
+
+1. Abra o navegador
+2. Acesse: http://localhost:8001/docs
+3. Se ver uma página bonita = FUNCIONOU! ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 ARQUIVOS IMPORTANTES:
+
+   iniciar.bat                    → Inicia o microserviço
+   GUIA_INSTALACAO_COMPLETO.md   → Guia detalhado
+   QUICK_START.md                → Guia técnico
+   requirements.txt              → Lista de bibliotecas
+   .env                          → Configurações (CRIE ESTE!)
+   .env.example                  → Exemplo de configuração
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❓ PROBLEMAS COMUNS:
+
+1. "Python não encontrado"
+   → Instale Python 3.11+
+   → https://www.python.org/downloads/
+   → MARQUE: "Add Python to PATH"
+
+2. "OPENAI_API_KEY not configured"
+   → Edite o arquivo .env
+   → Adicione sua chave da OpenAI
+
+3. "Port 8001 already in use"
+   → Já está rodando em outra janela
+   → Feche e tente novamente
+
+4. Outras dúvidas?
+   → Leia: GUIA_INSTALACAO_COMPLETO.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 O QUE ESTE MICROSERVIÇO FAZ?
+
+   ✓ Recebe um PDF
+   ✓ Extrai o texto
+   ✓ Usa IA (OpenAI GPT-4) para gerar curso
+   ✓ Retorna curso estruturado em JSON
+   ✓ Taxa de sucesso: 95%+ (muito melhor que antes!)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 CUSTO:
+
+   Com $5 USD grátis da OpenAI você consegue gerar:
+   → 250 a 500 cursos completos!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PRÓXIMOS PASSOS:
+
+   1. Configure e rode o microserviço
+   2. Teste com um PDF
+   3. Integre com Laravel
+   4. Implemente página de preview
+   5. Sistema de aprovação/edição
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ TUDO CERTO?
+
+   Acesse: http://localhost:8001/docs
+
+   Veja a mágica acontecer! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

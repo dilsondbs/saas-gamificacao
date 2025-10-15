@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\BelongsToTenant;
 class CourseEnrollment extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
         'user_id',
@@ -14,6 +15,7 @@ class CourseEnrollment extends Model
         'enrolled_at',
         'completed_at',
         'progress_percentage',
+        'tenant_id',
     ];
 
     protected $casts = [
