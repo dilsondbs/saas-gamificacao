@@ -12,11 +12,11 @@ return [
     |
     */
     'central_domains' => [
-        '127.0.0.1',
-        'localhost',
-        'saas-gamificacao.local',
-        env('CENTRAL_DOMAIN', '127.0.0.1'),
-    ],
+    '127.0.0.1',
+    'localhost',
+    'saas-gamificacao.local',
+    '187.110.167.67',
+     ],
 
     /*
     |--------------------------------------------------------------------------
