@@ -6,7 +6,7 @@
 - **Central**: Gerenciamento de tenants, billing, registro
 - **Tenant**: Escola/organização individual com isolamento completo
 
-### Personas de Teste
+### Personas de Testes
 1. **Super Admin Central** - Gerencia toda a plataforma
 2. **Admin Tenant** - Administra uma escola específica
 3. **Instructor** - Professor que cria conteúdo
